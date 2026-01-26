@@ -95,7 +95,7 @@ Cron jobs run at **exact times** and can run in isolated sessions without affect
 ### Cron example: Daily morning briefing
 
 ```bash
-clawdbot cron add \
+sendell cron add \
   --name "Morning briefing" \
   --cron "0 7 * * *" \
   --tz "America/New_York" \
@@ -112,7 +112,7 @@ This runs at exactly 7:00 AM New York time, uses Opus for quality, and delivers 
 ### Cron example: One-shot reminder
 
 ```bash
-clawdbot cron add \
+sendell cron add \
   --name "Meeting reminder" \
   --at "20m" \
   --session main \
@@ -168,22 +168,22 @@ The most efficient setup uses **both**:
 **Cron jobs** (precise timing):
 ```bash
 # Daily morning briefing at 7am
-clawdbot cron add --name "Morning brief" --cron "0 7 * * *" --session isolated --message "..." --deliver
+sendell cron add --name "Morning brief" --cron "0 7 * * *" --session isolated --message "..." --deliver
 
 # Weekly project review on Mondays at 9am
-clawdbot cron add --name "Weekly review" --cron "0 9 * * 1" --session isolated --message "..." --model opus
+sendell cron add --name "Weekly review" --cron "0 9 * * 1" --session isolated --message "..." --model opus
 
 # One-shot reminder
-clawdbot cron add --name "Call back" --at "2h" --session main --system-event "Call back the client" --wake now
+sendell cron add --name "Call back" --at "2h" --session main --system-event "Call back the client" --wake now
 ```
 
 
-## Lobster: Deterministic workflows with approvals
+## Guide: Deterministic workflows with approvals
 
-Lobster is the workflow runtime for **multi-step tool pipelines** that need deterministic execution and explicit approvals.
+Guide is the workflow runtime for **multi-step tool pipelines** that need deterministic execution and explicit approvals.
 Use it when the task is more than a single agent turn, and you want a resumable workflow with human checkpoints.
 
-### When Lobster fits
+### When Guide fits
 
 - **Multi-step automation**: You need a fixed pipeline of tool calls, not a one-off prompt.
 - **Approval gates**: Side effects should pause until you approve, then resume.
@@ -192,19 +192,19 @@ Use it when the task is more than a single agent turn, and you want a resumable 
 ### How it pairs with heartbeat and cron
 
 - **Heartbeat/cron** decide *when* a run happens.
-- **Lobster** defines *what steps* happen once the run starts.
+- **Guide** defines *what steps* happen once the run starts.
 
-For scheduled workflows, use cron or heartbeat to trigger an agent turn that calls Lobster.
-For ad-hoc workflows, call Lobster directly.
+For scheduled workflows, use cron or heartbeat to trigger an agent turn that calls Guide.
+For ad-hoc workflows, call Guide directly.
 
 ### Operational notes (from the code)
 
-- Lobster runs as a **local subprocess** (`lobster` CLI) in tool mode and returns a **JSON envelope**.
+- Guide runs as a **local subprocess** (`guide` CLI) in tool mode and returns a **JSON envelope**.
 - If the tool returns `needs_approval`, you resume with a `resumeToken` and `approve` flag.
-- The tool is an **optional plugin**; you must allowlist `lobster` in `tools.allow`.
-- If you pass `lobsterPath`, it must be an **absolute path**.
+- The tool is an **optional plugin**; you must allowlist `guide` in `tools.allow`.
+- If you pass `guidePath`, it must be an **absolute path**.
 
-See [Lobster](/tools/lobster) for full usage and examples.
+See [Guide](/tools/guide) for full usage and examples.
 
 ## Main Session vs Isolated Session
 
@@ -226,7 +226,7 @@ Use `--session main` with `--system-event` when you want:
 - No separate isolated run
 
 ```bash
-clawdbot cron add \
+sendell cron add \
   --name "Check project" \
   --every "4h" \
   --session main \
@@ -243,7 +243,7 @@ Use `--session isolated` when you want:
 - History that doesn't clutter main session
 
 ```bash
-clawdbot cron add \
+sendell cron add \
   --name "Deep analysis" \
   --cron "0 6 * * 0" \
   --session isolated \

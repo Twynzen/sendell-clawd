@@ -8,17 +8,17 @@ import type {
 import { registerInternalHook } from "../hooks/internal-hooks.js";
 import { resolveUserPath } from "../utils.js";
 import type {
-  ClawdbotPluginApi,
-  ClawdbotPluginChannelRegistration,
-  ClawdbotPluginCliRegistrar,
-  ClawdbotPluginCommandDefinition,
-  ClawdbotPluginHttpHandler,
-  ClawdbotPluginHttpRouteHandler,
-  ClawdbotPluginHookOptions,
+  SendellPluginApi,
+  SendellPluginChannelRegistration,
+  SendellPluginCliRegistrar,
+  SendellPluginCommandDefinition,
+  SendellPluginHttpHandler,
+  SendellPluginHttpRouteHandler,
+  SendellPluginHookOptions,
   ProviderPlugin,
-  ClawdbotPluginService,
-  ClawdbotPluginToolContext,
-  ClawdbotPluginToolFactory,
+  SendellPluginService,
+  SendellPluginToolContext,
+  SendellPluginToolFactory,
   PluginConfigUiHint,
   PluginDiagnostic,
   PluginLogger,
@@ -36,7 +36,7 @@ import { normalizePluginHttpPath } from "./http-path.js";
 
 export type PluginToolRegistration = {
   pluginId: string;
-  factory: ClawdbotPluginToolFactory;
+  factory: SendellPluginToolFactory;
   names: string[];
   optional: boolean;
   source: string;
@@ -44,21 +44,21 @@ export type PluginToolRegistration = {
 
 export type PluginCliRegistration = {
   pluginId: string;
-  register: ClawdbotPluginCliRegistrar;
+  register: SendellPluginCliRegistrar;
   commands: string[];
   source: string;
 };
 
 export type PluginHttpRegistration = {
   pluginId: string;
-  handler: ClawdbotPluginHttpHandler;
+  handler: SendellPluginHttpHandler;
   source: string;
 };
 
 export type PluginHttpRouteRegistration = {
   pluginId?: string;
   path: string;
-  handler: ClawdbotPluginHttpRouteHandler;
+  handler: SendellPluginHttpRouteHandler;
   source?: string;
 };
 
@@ -84,13 +84,13 @@ export type PluginHookRegistration = {
 
 export type PluginServiceRegistration = {
   pluginId: string;
-  service: ClawdbotPluginService;
+  service: SendellPluginService;
   source: string;
 };
 
 export type PluginCommandRegistration = {
   pluginId: string;
-  command: ClawdbotPluginCommandDefinition;
+  command: SendellPluginCommandDefinition;
   source: string;
 };
 
@@ -167,13 +167,13 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
 
   const registerTool = (
     record: PluginRecord,
-    tool: AnyAgentTool | ClawdbotPluginToolFactory,
+    tool: AnyAgentTool | SendellPluginToolFactory,
     opts?: { name?: string; names?: string[]; optional?: boolean },
   ) => {
     const names = opts?.names ?? (opts?.name ? [opts.name] : []);
     const optional = opts?.optional === true;
-    const factory: ClawdbotPluginToolFactory =
-      typeof tool === "function" ? tool : (_ctx: ClawdbotPluginToolContext) => tool;
+    const factory: SendellPluginToolFactory =
+      typeof tool === "function" ? tool : (_ctx: SendellPluginToolContext) => tool;
 
     if (typeof tool !== "function") {
       names.push(tool.name);
@@ -196,8 +196,8 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
     record: PluginRecord,
     events: string | string[],
     handler: Parameters<typeof registerInternalHook>[1],
-    opts: ClawdbotPluginHookOptions | undefined,
-    config: ClawdbotPluginApi["config"],
+    opts: SendellPluginHookOptions | undefined,
+    config: SendellPluginApi["config"],
   ) => {
     const eventList = Array.isArray(events) ? events : [events];
     const normalizedEvents = eventList.map((event) => event.trim()).filter(Boolean);
@@ -221,11 +221,11 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
             ...entry.hook,
             name,
             description,
-            source: "clawdbot-plugin",
+            source: "sendell-plugin",
             pluginId: record.id,
           },
-          clawdbot: {
-            ...entry.clawdbot,
+          sendell: {
+            ...entry.sendell,
             events: normalizedEvents,
           },
         }
@@ -233,14 +233,14 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
           hook: {
             name,
             description,
-            source: "clawdbot-plugin",
+            source: "sendell-plugin",
             pluginId: record.id,
             filePath: record.source,
             baseDir: path.dirname(record.source),
             handlerPath: record.source,
           },
           frontmatter: {},
-          clawdbot: { events: normalizedEvents },
+          sendell: { events: normalizedEvents },
           invocation: { enabled: true },
         };
 
@@ -282,7 +282,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
     record.gatewayMethods.push(trimmed);
   };
 
-  const registerHttpHandler = (record: PluginRecord, handler: ClawdbotPluginHttpHandler) => {
+  const registerHttpHandler = (record: PluginRecord, handler: SendellPluginHttpHandler) => {
     record.httpHandlers += 1;
     registry.httpHandlers.push({
       pluginId: record.id,
@@ -293,7 +293,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
 
   const registerHttpRoute = (
     record: PluginRecord,
-    params: { path: string; handler: ClawdbotPluginHttpRouteHandler },
+    params: { path: string; handler: SendellPluginHttpRouteHandler },
   ) => {
     const normalizedPath = normalizePluginHttpPath(params.path);
     if (!normalizedPath) {
@@ -325,11 +325,11 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
 
   const registerChannel = (
     record: PluginRecord,
-    registration: ClawdbotPluginChannelRegistration | ChannelPlugin,
+    registration: SendellPluginChannelRegistration | ChannelPlugin,
   ) => {
     const normalized =
-      typeof (registration as ClawdbotPluginChannelRegistration).plugin === "object"
-        ? (registration as ClawdbotPluginChannelRegistration)
+      typeof (registration as SendellPluginChannelRegistration).plugin === "object"
+        ? (registration as SendellPluginChannelRegistration)
         : { plugin: registration as ChannelPlugin };
     const plugin = normalized.plugin;
     const id = typeof plugin?.id === "string" ? plugin.id.trim() : String(plugin?.id ?? "").trim();
@@ -382,7 +382,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
 
   const registerCli = (
     record: PluginRecord,
-    registrar: ClawdbotPluginCliRegistrar,
+    registrar: SendellPluginCliRegistrar,
     opts?: { commands?: string[] },
   ) => {
     const commands = (opts?.commands ?? []).map((cmd) => cmd.trim()).filter(Boolean);
@@ -395,7 +395,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
     });
   };
 
-  const registerService = (record: PluginRecord, service: ClawdbotPluginService) => {
+  const registerService = (record: PluginRecord, service: SendellPluginService) => {
     const id = service.id.trim();
     if (!id) return;
     record.services.push(id);
@@ -406,7 +406,7 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
     });
   };
 
-  const registerCommand = (record: PluginRecord, command: ClawdbotPluginCommandDefinition) => {
+  const registerCommand = (record: PluginRecord, command: SendellPluginCommandDefinition) => {
     const name = command.name.trim();
     if (!name) {
       pushDiagnostic({
@@ -464,10 +464,10 @@ export function createPluginRegistry(registryParams: PluginRegistryParams) {
   const createApi = (
     record: PluginRecord,
     params: {
-      config: ClawdbotPluginApi["config"];
+      config: SendellPluginApi["config"];
       pluginConfig?: Record<string, unknown>;
     },
-  ): ClawdbotPluginApi => {
+  ): SendellPluginApi => {
     return {
       id: record.id,
       name: record.name,

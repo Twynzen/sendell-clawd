@@ -1,14 +1,14 @@
 ---
 name: command-logger
 description: "Log all command events to a centralized audit file"
-homepage: https://docs.clawd.bot/hooks#command-logger
+homepage: https://docs.sendell.bot/hooks#command-logger
 metadata:
   {
-    "clawdbot":
+    "sendell":
       {
         "emoji": "📝",
         "events": ["command"],
-        "install": [{ "id": "bundled", "kind": "bundled", "label": "Bundled with Clawdbot" }],
+        "install": [{ "id": "bundled", "kind": "bundled", "label": "Bundled with Sendell" }],
       },
   }
 ---
@@ -22,7 +22,7 @@ Logs all command events (`/new`, `/reset`, `/stop`, etc.) to a centralized audit
 Every time you issue a command to the agent:
 
 1. **Captures event details** - Command action, timestamp, session key, sender ID, source
-2. **Appends to log file** - Writes a JSON line to `~/.clawdbot/logs/commands.log`
+2. **Appends to log file** - Writes a JSON line to `~/.sendell/logs/commands.log`
 3. **Silent operation** - Runs in the background without user notifications
 
 ## Output Format
@@ -43,7 +43,7 @@ Log entries are written in JSONL (JSON Lines) format:
 
 ## Log File Location
 
-`~/.clawdbot/logs/commands.log`
+`~/.sendell/logs/commands.log`
 
 ## Requirements
 
@@ -62,7 +62,7 @@ No configuration needed. The hook automatically:
 To disable this hook:
 
 ```bash
-clawdbot hooks disable command-logger
+sendell hooks disable command-logger
 ```
 
 Or via config:
@@ -86,13 +86,13 @@ The hook does not automatically rotate logs. To manage log size, you can:
 1. **Manual rotation**:
 
    ```bash
-   mv ~/.clawdbot/logs/commands.log ~/.clawdbot/logs/commands.log.old
+   mv ~/.sendell/logs/commands.log ~/.sendell/logs/commands.log.old
    ```
 
 2. **Use logrotate** (Linux):
-   Create `/etc/logrotate.d/clawdbot`:
+   Create `/etc/logrotate.d/sendell`:
    ```
-   /home/username/.clawdbot/logs/commands.log {
+   /home/username/.sendell/logs/commands.log {
        weekly
        rotate 4
        compress
@@ -106,17 +106,17 @@ The hook does not automatically rotate logs. To manage log size, you can:
 View recent commands:
 
 ```bash
-tail -n 20 ~/.clawdbot/logs/commands.log
+tail -n 20 ~/.sendell/logs/commands.log
 ```
 
 Pretty-print with jq:
 
 ```bash
-cat ~/.clawdbot/logs/commands.log | jq .
+cat ~/.sendell/logs/commands.log | jq .
 ```
 
 Filter by action:
 
 ```bash
-grep '"action":"new"' ~/.clawdbot/logs/commands.log | jq .
+grep '"action":"new"' ~/.sendell/logs/commands.log | jq .
 ```

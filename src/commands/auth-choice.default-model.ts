@@ -1,16 +1,16 @@
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import type { WizardPrompter } from "../wizard/prompts.js";
 
 export async function applyDefaultModelChoice(params: {
-  config: ClawdbotConfig;
+  config: SendellConfig;
   setDefaultModel: boolean;
   defaultModel: string;
-  applyDefaultConfig: (config: ClawdbotConfig) => ClawdbotConfig;
-  applyProviderConfig: (config: ClawdbotConfig) => ClawdbotConfig;
+  applyDefaultConfig: (config: SendellConfig) => SendellConfig;
+  applyProviderConfig: (config: SendellConfig) => SendellConfig;
   noteDefault?: string;
   noteAgentModel: (model: string) => Promise<void>;
   prompter: WizardPrompter;
-}): Promise<{ config: ClawdbotConfig; agentModelOverride?: string }> {
+}): Promise<{ config: SendellConfig; agentModelOverride?: string }> {
   if (params.setDefaultModel) {
     const next = params.applyDefaultConfig(params.config);
     if (params.noteDefault) {

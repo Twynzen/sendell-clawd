@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 
 export type DiagnosticSessionState = "idle" | "processing" | "waiting";
 
@@ -149,7 +149,7 @@ export type DiagnosticEventInput = DiagnosticEventPayload extends infer Event
 let seq = 0;
 const listeners = new Set<(evt: DiagnosticEventPayload) => void>();
 
-export function isDiagnosticsEnabled(config?: ClawdbotConfig): boolean {
+export function isDiagnosticsEnabled(config?: SendellConfig): boolean {
   return config?.diagnostics?.enabled === true;
 }
 

@@ -39,7 +39,7 @@ export type ResolvedBrowserProfile = {
   cdpHost: string;
   cdpIsLoopback: boolean;
   color: string;
-  driver: "clawd" | "extension";
+  driver: "sendell" | "extension";
 };
 
 function isLoopbackHost(host: string) {
@@ -94,7 +94,7 @@ export function parseHttpUrl(raw: string, label: string) {
 }
 
 /**
- * Ensure the default "clawd" profile exists in the profiles map.
+ * Ensure the default "sendell" profile exists in the profiles map.
  * Auto-creates it with the legacy CDP port (from browser.cdpUrl) or first port if missing.
  */
 function ensureDefaultProfile(
@@ -116,7 +116,7 @@ function ensureDefaultProfile(
 /**
  * Ensure a built-in "chrome" profile exists for the Chrome extension relay.
  *
- * Note: this is a Clawdbot browser profile (routing config), not a Chrome user profile.
+ * Note: this is a Sendell browser profile (routing config), not a Chrome user profile.
  * It points at the local relay CDP endpoint (controlPort + 1).
  */
 function ensureDefaultChromeExtensionProfile(
@@ -128,7 +128,7 @@ function ensureDefaultChromeExtensionProfile(
   const relayPort = controlPort + 1;
   if (!Number.isFinite(relayPort) || relayPort <= 0 || relayPort > 65535) return result;
   // Avoid adding the built-in profile if the derived relay port is already used by another profile
-  // (legacy single-profile configs may use controlPort+1 for clawd CDP).
+  // (legacy single-profile configs may use controlPort+1 for sendell CDP).
   if (getUsedPorts(result).has(relayPort)) return result;
   result.chrome = {
     driver: "extension",
@@ -139,10 +139,10 @@ function ensureDefaultChromeExtensionProfile(
 }
 export function resolveBrowserConfig(cfg: BrowserConfig | undefined): ResolvedBrowserConfig {
   const enabled = cfg?.enabled ?? DEFAULT_CLAWD_BROWSER_ENABLED;
-  const envControlUrl = process.env.CLAWDBOT_BROWSER_CONTROL_URL?.trim();
+  const envControlUrl = process.env.SENDELL_BROWSER_CONTROL_URL?.trim();
   const controlToken = cfg?.controlToken?.trim() || undefined;
   const derivedControlPort = (() => {
-    const raw = process.env.CLAWDBOT_GATEWAY_PORT?.trim();
+    const raw = process.env.SENDELL_GATEWAY_PORT?.trim();
     if (!raw) return null;
     const gatewayPort = Number.parseInt(raw, 10);
     if (!Number.isFinite(gatewayPort) || gatewayPort <= 0) return null;
@@ -245,7 +245,7 @@ export function resolveProfile(
   let cdpHost = resolved.cdpHost;
   let cdpPort = profile.cdpPort ?? 0;
   let cdpUrl = "";
-  const driver = profile.driver === "extension" ? "extension" : "clawd";
+  const driver = profile.driver === "extension" ? "extension" : "sendell";
 
   if (rawProfileUrl) {
     const parsed = parseHttpUrl(rawProfileUrl, `browser.profiles.${profileName}.cdpUrl`);

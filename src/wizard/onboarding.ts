@@ -27,7 +27,7 @@ import type {
   ResetScope,
 } from "../commands/onboard-types.js";
 import { formatCliCommand } from "../cli/command-format.js";
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import {
   DEFAULT_GATEWAY_PORT,
   readConfigFileSnapshot,
@@ -51,12 +51,12 @@ async function requireRiskAcknowledgement(params: {
 
   await params.prompter.note(
     [
-      "Please read: https://docs.clawd.bot/security",
+      "Please read: https://docs.sendell.bot/security",
       "",
-      "Clawdbot agents can run commands, read/write files, and act through any tools you enable. They can only send messages on channels you configure (for example, an account you log in on this machine, or a bot account like Slack/Discord).",
+      "Sendell agents can run commands, read/write files, and act through any tools you enable. They can only send messages on channels you configure (for example, an account you log in on this machine, or a bot account like Slack/Discord).",
       "",
       "If you’re new to this, start with the sandbox and least privilege. It helps limit what an agent can do if it’s tricked or makes a mistake.",
-      "Learn more: https://docs.clawd.bot/sandboxing",
+      "Learn more: https://docs.sendell.bot/sandboxing",
     ].join("\n"),
     "Security",
   );
@@ -76,11 +76,11 @@ export async function runOnboardingWizard(
   prompter: WizardPrompter,
 ) {
   printWizardHeader(runtime);
-  await prompter.intro("Clawdbot onboarding");
+  await prompter.intro("Sendell onboarding");
   await requireRiskAcknowledgement({ opts, prompter });
 
   const snapshot = await readConfigFileSnapshot();
-  let baseConfig: ClawdbotConfig = snapshot.valid ? snapshot.config : {};
+  let baseConfig: SendellConfig = snapshot.valid ? snapshot.config : {};
 
   if (snapshot.exists && !snapshot.valid) {
     await prompter.note(summarizeExistingConfig(baseConfig), "Invalid config");
@@ -89,19 +89,19 @@ export async function runOnboardingWizard(
         [
           ...snapshot.issues.map((iss) => `- ${iss.path}: ${iss.message}`),
           "",
-          "Docs: https://docs.clawd.bot/gateway/configuration",
+          "Docs: https://docs.sendell.bot/gateway/configuration",
         ].join("\n"),
         "Config issues",
       );
     }
     await prompter.outro(
-      `Config invalid. Run \`${formatCliCommand("clawdbot doctor")}\` to repair it, then re-run onboarding.`,
+      `Config invalid. Run \`${formatCliCommand("sendell doctor")}\` to repair it, then re-run onboarding.`,
     );
     runtime.exit(1);
     return;
   }
 
-  const quickstartHint = `Configure details later via ${formatCliCommand("clawdbot configure")}.`;
+  const quickstartHint = `Configure details later via ${formatCliCommand("sendell configure")}.`;
   const manualHint = "Configure port, network, Tailscale, and auth options.";
   const explicitFlowRaw = opts.flow?.trim();
   const normalizedExplicitFlow = explicitFlowRaw === "manual" ? "advanced" : explicitFlowRaw;
@@ -265,8 +265,8 @@ export async function runOnboardingWizard(
   const localUrl = `ws://127.0.0.1:${localPort}`;
   const localProbe = await probeGatewayReachable({
     url: localUrl,
-    token: baseConfig.gateway?.auth?.token ?? process.env.CLAWDBOT_GATEWAY_TOKEN,
-    password: baseConfig.gateway?.auth?.password ?? process.env.CLAWDBOT_GATEWAY_PASSWORD,
+    token: baseConfig.gateway?.auth?.token ?? process.env.SENDELL_GATEWAY_TOKEN,
+    password: baseConfig.gateway?.auth?.password ?? process.env.SENDELL_GATEWAY_PASSWORD,
   });
   const remoteUrl = baseConfig.gateway?.remote?.url?.trim() ?? "";
   const remoteProbe = remoteUrl
@@ -322,7 +322,7 @@ export async function runOnboardingWizard(
 
   const workspaceDir = resolveUserPath(workspaceInput.trim() || DEFAULT_WORKSPACE);
 
-  let nextConfig: ClawdbotConfig = {
+  let nextConfig: SendellConfig = {
     ...baseConfig,
     agents: {
       ...baseConfig.agents,

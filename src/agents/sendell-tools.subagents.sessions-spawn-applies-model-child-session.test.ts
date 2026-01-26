@@ -22,10 +22,10 @@ vi.mock("../config/config.js", async (importOriginal) => {
 });
 
 import "./test-helpers/fast-core-tools.js";
-import { createClawdbotTools } from "./clawdbot-tools.js";
+import { createSendellTools } from "./sendell-tools.js";
 import { resetSubagentRegistryForTests } from "./subagent-registry.js";
 
-describe("clawdbot-tools: subagents", () => {
+describe("sendell-tools: subagents", () => {
   beforeEach(() => {
     configOverride = {
       session: {
@@ -65,7 +65,7 @@ describe("clawdbot-tools: subagents", () => {
       return {};
     });
 
-    const tool = createClawdbotTools({
+    const tool = createSendellTools({
       agentSessionKey: "discord:group:req",
       agentSurface: "discord",
     }).find((candidate) => candidate.name === "sessions_spawn");
@@ -108,7 +108,7 @@ describe("clawdbot-tools: subagents", () => {
       return {};
     });
 
-    const tool = createClawdbotTools({
+    const tool = createSendellTools({
       agentSessionKey: "discord:group:req",
       agentChannel: "discord",
     }).find((candidate) => candidate.name === "sessions_spawn");
@@ -139,7 +139,7 @@ describe("clawdbot-tools: subagents", () => {
       return {};
     });
 
-    const tool = createClawdbotTools({
+    const tool = createSendellTools({
       agentSessionKey: "discord:group:req",
       agentChannel: "discord",
     }).find((candidate) => candidate.name === "sessions_spawn");
@@ -176,7 +176,7 @@ describe("clawdbot-tools: subagents", () => {
       return {};
     });
 
-    const tool = createClawdbotTools({
+    const tool = createSendellTools({
       agentSessionKey: "agent:main:main",
       agentChannel: "discord",
     }).find((candidate) => candidate.name === "sessions_spawn");

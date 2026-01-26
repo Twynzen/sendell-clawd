@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/llm-task",
+  "name": "@sendell/llm-task",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot JSON-only LLM task plugin",
-  "clawdbot": {
+  "description": "Sendell JSON-only LLM task plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: clawdbot
+    name: sendell
     runtime: docker
     plan: starter
     healthCheckPath: /health
@@ -9,13 +9,13 @@ services:
         value: "8080"
       - key: SETUP_PASSWORD
         sync: false
-      - key: CLAWDBOT_STATE_DIR
-        value: /data/.clawdbot
-      - key: CLAWDBOT_WORKSPACE_DIR
+      - key: SENDELL_STATE_DIR
+        value: /data/.sendell
+      - key: SENDELL_WORKSPACE_DIR
         value: /data/workspace
-      - key: CLAWDBOT_GATEWAY_TOKEN
+      - key: SENDELL_GATEWAY_TOKEN
         generateValue: true
     disk:
-      name: clawdbot-data
+      name: sendell-data
       mountPath: /data
       sizeGB: 1

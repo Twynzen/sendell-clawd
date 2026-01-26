@@ -9,7 +9,7 @@ vi.mock("./chrome.js", () => ({
   launchClawdChrome: vi.fn(async () => {
     throw new Error("unexpected launch");
   }),
-  resolveClawdUserDataDir: vi.fn(() => "/tmp/clawd"),
+  resolveClawdUserDataDir: vi.fn(() => "/tmp/sendell"),
   stopClawdChrome: vi.fn(async () => {}),
 }));
 
@@ -80,7 +80,7 @@ describe("browser server-context ensureTabAvailable", () => {
             cdpPort: 18792,
             color: "#00AA00",
           },
-          clawd: { cdpPort: 18800, color: "#FF4500" },
+          sendell: { cdpPort: 18800, color: "#FF4500" },
         },
       },
       profiles: new Map(),
@@ -139,7 +139,7 @@ describe("browser server-context ensureTabAvailable", () => {
             cdpPort: 18792,
             color: "#00AA00",
           },
-          clawd: { cdpPort: 18800, color: "#FF4500" },
+          sendell: { cdpPort: 18800, color: "#FF4500" },
         },
       },
       profiles: new Map(),
@@ -188,7 +188,7 @@ describe("browser server-context ensureTabAvailable", () => {
             cdpPort: 18792,
             color: "#00AA00",
           },
-          clawd: { cdpPort: 18800, color: "#FF4500" },
+          sendell: { cdpPort: 18800, color: "#FF4500" },
         },
       },
       profiles: new Map(),

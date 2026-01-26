@@ -18,9 +18,9 @@ agent (with a session switcher for other sessions).
 - Manual: Lobster menu → “Open Chat”.
 - Auto‑open for testing:
   ```bash
-  dist/Clawdbot.app/Contents/MacOS/Clawdbot --webchat
+  dist/Sendell.app/Contents/MacOS/Sendell --webchat
   ```
-- Logs: `./scripts/clawlog.sh` (subsystem `com.clawdbot`, category `WebChatSwiftUI`).
+- Logs: `./scripts/clawlog.sh` (subsystem `com.sendell`, category `WebChatSwiftUI`).
 
 ## How it’s wired
 

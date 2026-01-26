@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/line",
+  "name": "@sendell/line",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot LINE channel plugin",
-  "clawdbot": {
+  "description": "Sendell LINE channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ],
@@ -18,12 +18,12 @@
       "quickstartAllowFrom": true
     },
     "install": {
-      "npmSpec": "@clawdbot/line",
+      "npmSpec": "@sendell/line",
       "localPath": "extensions/line",
       "defaultChoice": "npm"
     }
   },
   "devDependencies": {
-    "clawdbot": "workspace:*"
+    "sendell": "workspace:*"
   }
 }

@@ -3,7 +3,7 @@ import JSON5 from "json5";
 import { parseFrontmatterBlock } from "../markdown/frontmatter.js";
 import { parseBooleanValue } from "../utils/boolean.js";
 import type {
-  ClawdbotHookMetadata,
+  SendellHookMetadata,
   HookEntry,
   HookInstallSpec,
   HookInvocationPolicy,
@@ -62,33 +62,33 @@ function parseFrontmatterBool(value: string | undefined, fallback: boolean): boo
   return parsed === undefined ? fallback : parsed;
 }
 
-export function resolveClawdbotMetadata(
+export function resolveSendellMetadata(
   frontmatter: ParsedHookFrontmatter,
-): ClawdbotHookMetadata | undefined {
+): SendellHookMetadata | undefined {
   const raw = getFrontmatterValue(frontmatter, "metadata");
   if (!raw) return undefined;
   try {
-    const parsed = JSON5.parse(raw) as { clawdbot?: unknown };
+    const parsed = JSON5.parse(raw) as { sendell?: unknown };
     if (!parsed || typeof parsed !== "object") return undefined;
-    const clawdbot = (parsed as { clawdbot?: unknown }).clawdbot;
-    if (!clawdbot || typeof clawdbot !== "object") return undefined;
-    const clawdbotObj = clawdbot as Record<string, unknown>;
+    const sendell = (parsed as { sendell?: unknown }).sendell;
+    if (!sendell || typeof sendell !== "object") return undefined;
+    const sendellObj = sendell as Record<string, unknown>;
     const requiresRaw =
-      typeof clawdbotObj.requires === "object" && clawdbotObj.requires !== null
-        ? (clawdbotObj.requires as Record<string, unknown>)
+      typeof sendellObj.requires === "object" && sendellObj.requires !== null
+        ? (sendellObj.requires as Record<string, unknown>)
         : undefined;
-    const installRaw = Array.isArray(clawdbotObj.install) ? (clawdbotObj.install as unknown[]) : [];
+    const installRaw = Array.isArray(sendellObj.install) ? (sendellObj.install as unknown[]) : [];
     const install = installRaw
       .map((entry) => parseInstallSpec(entry))
       .filter((entry): entry is HookInstallSpec => Boolean(entry));
-    const osRaw = normalizeStringList(clawdbotObj.os);
-    const eventsRaw = normalizeStringList(clawdbotObj.events);
+    const osRaw = normalizeStringList(sendellObj.os);
+    const eventsRaw = normalizeStringList(sendellObj.events);
     return {
-      always: typeof clawdbotObj.always === "boolean" ? clawdbotObj.always : undefined,
-      emoji: typeof clawdbotObj.emoji === "string" ? clawdbotObj.emoji : undefined,
-      homepage: typeof clawdbotObj.homepage === "string" ? clawdbotObj.homepage : undefined,
-      hookKey: typeof clawdbotObj.hookKey === "string" ? clawdbotObj.hookKey : undefined,
-      export: typeof clawdbotObj.export === "string" ? clawdbotObj.export : undefined,
+      always: typeof sendellObj.always === "boolean" ? sendellObj.always : undefined,
+      emoji: typeof sendellObj.emoji === "string" ? sendellObj.emoji : undefined,
+      homepage: typeof sendellObj.homepage === "string" ? sendellObj.homepage : undefined,
+      hookKey: typeof sendellObj.hookKey === "string" ? sendellObj.hookKey : undefined,
+      export: typeof sendellObj.export === "string" ? sendellObj.export : undefined,
       os: osRaw.length > 0 ? osRaw : undefined,
       events: eventsRaw.length > 0 ? eventsRaw : [],
       requires: requiresRaw
@@ -115,5 +115,5 @@ export function resolveHookInvocationPolicy(
 }
 
 export function resolveHookKey(hookName: string, entry?: HookEntry): string {
-  return entry?.clawdbot?.hookKey ?? hookName;
+  return entry?.sendell?.hookKey ?? hookName;
 }

@@ -1,19 +1,19 @@
 ---
-summary: "Agent tool surface for Clawdbot (browser, canvas, nodes, message, cron) replacing legacy `clawdbot-*` skills"
+summary: "Agent tool surface for Sendell (browser, canvas, nodes, message, cron) replacing legacy `sendell-*` skills"
 read_when:
   - Adding or modifying agent tools
-  - Retiring or changing `clawdbot-*` skills
+  - Retiring or changing `sendell-*` skills
 ---
 
-# Tools (Clawdbot)
+# Tools (Sendell)
 
-Clawdbot exposes **first-class agent tools** for browser, canvas, nodes, and cron.
-These replace the old `clawdbot-*` skills: the tools are typed, no shelling,
+Sendell exposes **first-class agent tools** for browser, canvas, nodes, and cron.
+These replace the old `sendell-*` skills: the tools are typed, no shelling,
 and the agent should rely on them directly.
 
 ## Disabling tools
 
-You can globally allow/deny tools via `tools.allow` / `tools.deny` in `clawdbot.json`
+You can globally allow/deny tools via `tools.allow` / `tools.deny` in `sendell.json`
 (deny wins). This prevents disallowed tools from being sent to model providers.
 
 ```json5
@@ -25,7 +25,7 @@ You can globally allow/deny tools via `tools.allow` / `tools.deny` in `clawdbot.
 Notes:
 - Matching is case-insensitive.
 - `*` wildcards are supported (`"*"` means all tools).
-- If `tools.allow` only references unknown or unloaded plugin tool names, Clawdbot logs a warning and ignores the allowlist so core tools stay available.
+- If `tools.allow` only references unknown or unloaded plugin tool names, Sendell logs a warning and ignores the allowlist so core tools stay available.
 
 ## Tool profiles (base allowlist)
 
@@ -141,7 +141,7 @@ Available groups:
 - `group:automation`: `cron`, `gateway`
 - `group:messaging`: `message`
 - `group:nodes`: `nodes`
-- `group:clawdbot`: all built-in Clawdbot tools (excludes provider plugins)
+- `group:sendell`: all built-in Sendell tools (excludes provider plugins)
 
 Example (allow only file tools + browser):
 ```json5
@@ -160,7 +160,7 @@ tool usage guidance is injected into prompts. Some plugins ship their own skills
 alongside tools (for example, the voice-call plugin).
 
 Optional plugin tools:
-- [Lobster](/tools/lobster): typed workflow runtime with resumable approvals (requires the Lobster CLI on the gateway host).
+- [Guide](/tools/guide): typed workflow runtime with resumable approvals (requires the Guide CLI on the gateway host).
 - [LLM Task](/tools/llm-task): JSON-only LLM step for structured workflow output (optional schema validation).
 
 ## Tool inventory
@@ -190,7 +190,7 @@ Notes:
 - If `process` is disallowed, `exec` runs synchronously and ignores `yieldMs`/`background`.
 - `elevated` is gated by `tools.elevated` plus any `agents.list[].tools.elevated` override (both must allow) and is an alias for `host=gateway` + `security=full`.
 - `elevated` only changes behavior when the agent is sandboxed (otherwise it’s a no-op).
-- `host=node` can target a macOS companion app or a headless node host (`clawdbot node run`).
+- `host=node` can target a macOS companion app or a headless node host (`sendell node run`).
 - gateway/node approvals and allowlists: [Exec approvals](/tools/exec-approvals).
 
 ### `process`
@@ -212,7 +212,7 @@ Core parameters:
 - `count` (1–10; default from `tools.web.search.maxResults`)
 
 Notes:
-- Requires a Brave API key (recommended: `clawdbot configure --section web`, or set `BRAVE_API_KEY`).
+- Requires a Brave API key (recommended: `sendell configure --section web`, or set `BRAVE_API_KEY`).
 - Enable via `tools.web.search.enabled`.
 - Responses are cached (default 15 min).
 - See [Web tools](/tools/web) for setup.
@@ -233,7 +233,7 @@ Notes:
 - See [Firecrawl](/tools/firecrawl) for the optional anti-bot fallback.
 
 ### `browser`
-Control the dedicated clawd browser.
+Control the dedicated sendell browser.
 
 Core actions:
 - `status`, `start`, `stop`, `tabs`, `open`, `focus`, `close`
@@ -278,7 +278,7 @@ Notes:
 - Uses gateway `node.invoke` under the hood.
 - If no `node` is provided, the tool picks a default (single connected node or local mac node).
 - A2UI is v0.8 only (no `createSurface`); the CLI rejects v0.9 JSONL with line errors.
-- Quick smoke: `clawdbot nodes canvas a2ui push --node <id> --text "Hello from A2UI"`.
+- Quick smoke: `sendell nodes canvas a2ui push --node <id> --text "Hello from A2UI"`.
 
 ### `nodes`
 Discover and target paired nodes; send notifications; capture camera/screen.
@@ -365,7 +365,7 @@ Notes:
 Restart or apply updates to the running Gateway process (in-place).
 
 Core actions:
-- `restart` (authorizes + sends `SIGUSR1` for in-process restart; `clawdbot gateway` restart in-place)
+- `restart` (authorizes + sends `SIGUSR1` for in-process restart; `sendell gateway` restart in-place)
 - `config.get` / `config.schema`
 - `config.apply` (validate + write config + restart + wake)
 - `config.patch` (merge partial update + restart + wake)

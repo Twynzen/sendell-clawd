@@ -51,24 +51,24 @@ export function registerAgentCommands(program: Command, args: { agentChannelOpti
         `
 ${theme.heading("Examples:")}
 ${formatHelpExamples([
-  ['clawdbot agent --to +15555550123 --message "status update"', "Start a new session."],
-  ['clawdbot agent --agent ops --message "Summarize logs"', "Use a specific agent."],
+  ['sendell agent --to +15555550123 --message "status update"', "Start a new session."],
+  ['sendell agent --agent ops --message "Summarize logs"', "Use a specific agent."],
   [
-    'clawdbot agent --session-id 1234 --message "Summarize inbox" --thinking medium',
+    'sendell agent --session-id 1234 --message "Summarize inbox" --thinking medium',
     "Target a session with explicit thinking level.",
   ],
   [
-    'clawdbot agent --to +15555550123 --message "Trace logs" --verbose on --json',
+    'sendell agent --to +15555550123 --message "Trace logs" --verbose on --json',
     "Enable verbose logging and JSON output.",
   ],
-  ['clawdbot agent --to +15555550123 --message "Summon reply" --deliver', "Deliver reply."],
+  ['sendell agent --to +15555550123 --message "Summon reply" --deliver', "Deliver reply."],
   [
-    'clawdbot agent --agent ops --message "Generate report" --deliver --reply-channel slack --reply-to "#reports"',
+    'sendell agent --agent ops --message "Generate report" --deliver --reply-channel slack --reply-to "#reports"',
     "Send reply to a different channel/target.",
   ],
 ])}
 
-${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.clawd.bot/cli/agent")}`,
+${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.sendell.bot/cli/agent")}`,
     )
     .action(async (opts) => {
       const verboseLevel = typeof opts.verbose === "string" ? opts.verbose.toLowerCase() : "";
@@ -86,7 +86,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.clawd.bot/cli/agent
     .addHelpText(
       "after",
       () =>
-        `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/agents", "docs.clawd.bot/cli/agents")}\n`,
+        `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/agents", "docs.sendell.bot/cli/agents")}\n`,
     );
 
   agents
@@ -155,11 +155,11 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.clawd.bot/cli/agent
         `
 ${theme.heading("Examples:")}
 ${formatHelpExamples([
-  ['clawdbot agents set-identity --agent main --name "Clawd" --emoji "🦞"', "Set name + emoji."],
-  ["clawdbot agents set-identity --agent main --avatar avatars/clawd.png", "Set avatar path."],
-  ["clawdbot agents set-identity --workspace ~/clawd --from-identity", "Load from IDENTITY.md."],
+  ['sendell agents set-identity --agent main --name "Sendell" --emoji "🦞"', "Set name + emoji."],
+  ["sendell agents set-identity --agent main --avatar avatars/sendell.png", "Set avatar path."],
+  ["sendell agents set-identity --workspace ~/sendell --from-identity", "Load from IDENTITY.md."],
   [
-    "clawdbot agents set-identity --identity-file ~/clawd/IDENTITY.md --agent main",
+    "sendell agents set-identity --identity-file ~/sendell/IDENTITY.md --agent main",
     "Use a specific IDENTITY.md.",
   ],
 ])}

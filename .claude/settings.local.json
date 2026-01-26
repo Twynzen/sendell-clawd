@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git mv:*)",
+      "Bash(find:*)",
+      "Bash(xargs sed:*)",
+      "Bash(while read f)",
+      "Bash(do sed -i 's/SENDELL/SENDELL/g; s/Sendell/Sendell/g; s/sendell/sendell/g' \"$f\")",
+      "Bash(done)",
+      "Bash(do sed -i 's/\\\\bclawd\\\\b/sendell/g; s/\\\\bClawd\\\\b/Sendell/g' \"$f\")",
+      "Bash(do sed -i 's/guide/guide/g; s/Guide/Guide/g; s/NAVIGATE/NAVIGATE/g; s/contribut/contribut/g; s/spiritual guide/spiritual guide/g; s/spiritual guide/spiritual guide/g; s/🦞/👻/g' \"$f\")",
+      "Bash(ls \"C:\\\\Users\\\\Daniel\\\\Desktop\\\\Daniel\\\\sendellCrawd\\\\sendell-clawd\\\\extensions\\\\lobster\"\" 2>/dev/null && echo \"exists\" || echo \"not found \")",
+      "Bash(pnpm build:*)",
+      "Bash(node --version)",
+      "Bash(where pnpm:*)",
+      "Bash(npm ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm install:*)",
+      "Bash(git checkout:*)",
+      "Bash(git config:*)",
+      "Bash(GIT_TRACE=1 git commit:*)",
+      "Bash(node scripts/format-staged.js:*)",
+      "Bash(node_modules/.bin/oxfmt --write src/ test/)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git diff:*)",
+      "Bash(xargs -0 -I{} sh -c 'echo \"\"$1\"\"' _ {})",
+      "Bash(node_modules/.bin/oxfmt.CMD:*)",
+      "Bash(echo:*)"
+    ]
+  }
+}

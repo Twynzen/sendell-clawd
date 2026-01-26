@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/telegram",
+  "name": "@sendell/telegram",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Telegram channel plugin",
-  "clawdbot": {
+  "description": "Sendell Telegram channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

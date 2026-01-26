@@ -9,7 +9,7 @@ read_when:
 
 Goal: go from **zero** → **first working chat** (with sane defaults) as quickly as possible.
 
-Recommended path: use the **CLI onboarding wizard** (`clawdbot onboard`). It sets up:
+Recommended path: use the **CLI onboarding wizard** (`sendell onboard`). It sets up:
 - model/auth (OAuth recommended)
 - gateway settings
 - channels (WhatsApp/Telegram/Discord/Mattermost (plugin)/...)
@@ -28,7 +28,7 @@ run on host, set an explicit per-agent override:
   "routing": {
     "agents": {
       "main": {
-        "workspace": "~/clawd",
+        "workspace": "~/sendell",
         "sandbox": { "mode": "off" }
       }
     }
@@ -41,7 +41,7 @@ run on host, set an explicit per-agent override:
 - Node `>=22`
 - `pnpm` (optional; recommended if you build from source)
 - **Recommended:** Brave Search API key for web search. Easiest path:
-  `clawdbot configure --section web` (stores `tools.web.search.apiKey`).
+  `sendell configure --section web` (stores `tools.web.search.apiKey`).
   See [Web tools](/tools/web).
 
 macOS: if you plan to build the apps, install Xcode / CLT. For the CLI + gateway only, Node is enough.
@@ -50,7 +50,7 @@ Windows: use **WSL2** (Ubuntu recommended). WSL2 is strongly recommended; native
 ## 1) Install the CLI (recommended)
 
 ```bash
-curl -fsSL https://clawd.bot/install.sh | bash
+curl -fsSL https://sendell.bot/install.sh | bash
 ```
 
 Installer options (install method, non-interactive, from GitHub): [Install](/install).
@@ -58,23 +58,23 @@ Installer options (install method, non-interactive, from GitHub): [Install](/ins
 Windows (PowerShell):
 
 ```powershell
-iwr -useb https://clawd.bot/install.ps1 | iex
+iwr -useb https://sendell.bot/install.ps1 | iex
 ```
 
 Alternative (global install):
 
 ```bash
-npm install -g clawdbot@latest
+npm install -g sendell@latest
 ```
 
 ```bash
-pnpm add -g clawdbot@latest
+pnpm add -g sendell@latest
 ```
 
 ## 2) Run the onboarding wizard (and install the service)
 
 ```bash
-clawdbot onboard --install-daemon
+sendell onboard --install-daemon
 ```
 
 What you’ll choose:
@@ -91,8 +91,8 @@ Wizard doc: [Wizard](/start/wizard)
 
 - **Recommended Anthropic path:** set an API key (wizard can store it for service use). `claude setup-token` is also supported if you want to reuse Claude Code credentials.
 
-- OAuth credentials (legacy import): `~/.clawdbot/credentials/oauth.json`
-- Auth profiles (OAuth + API keys): `~/.clawdbot/agents/<agentId>/agent/auth-profiles.json`
+- OAuth credentials (legacy import): `~/.sendell/credentials/oauth.json`
+- Auth profiles (OAuth + API keys): `~/.sendell/agents/<agentId>/agent/auth-profiles.json`
 
 Headless/server tip: do OAuth on a normal machine first, then copy `oauth.json` to the gateway host.
 
@@ -101,13 +101,13 @@ Headless/server tip: do OAuth on a normal machine first, then copy `oauth.json` 
 If you installed the service during onboarding, the Gateway should already be running:
 
 ```bash
-clawdbot gateway status
+sendell gateway status
 ```
 
 Manual run (foreground):
 
 ```bash
-clawdbot gateway --port 18789 --verbose
+sendell gateway --port 18789 --verbose
 ```
 
 Dashboard (local loopback): `http://127.0.0.1:18789/`
@@ -119,8 +119,8 @@ channels. If you use WhatsApp or Telegram, run the Gateway with **Node**.
 ## 3.5) Quick verify (2 min)
 
 ```bash
-clawdbot status
-clawdbot health
+sendell status
+sendell health
 ```
 
 ## 4) Pair + connect your first chat surface
@@ -128,7 +128,7 @@ clawdbot health
 ### WhatsApp (QR login)
 
 ```bash
-clawdbot channels login
+sendell channels login
 ```
 
 Scan via WhatsApp → Settings → Linked Devices.
@@ -150,26 +150,26 @@ Default posture: unknown DMs get a short code and messages are not processed unt
 If your first DM gets no reply, approve the pairing:
 
 ```bash
-clawdbot pairing list whatsapp
-clawdbot pairing approve whatsapp <code>
+sendell pairing list whatsapp
+sendell pairing approve whatsapp <code>
 ```
 
 Pairing doc: [Pairing](/start/pairing)
 
 ## From source (development)
 
-If you’re hacking on Clawdbot itself, run from source:
+If you’re hacking on Sendell itself, run from source:
 
 ```bash
-git clone https://github.com/clawdbot/clawdbot.git
-cd clawdbot
+git clone https://github.com/sendell/sendell.git
+cd sendell
 pnpm install
 pnpm ui:build # auto-installs UI deps on first run
 pnpm build
-clawdbot onboard --install-daemon
+sendell onboard --install-daemon
 ```
 
-If you don’t have a global install yet, run the onboarding step via `pnpm clawdbot ...` from the repo.
+If you don’t have a global install yet, run the onboarding step via `pnpm sendell ...` from the repo.
 
 Gateway (from this repo):
 
@@ -182,13 +182,13 @@ node dist/entry.js gateway --port 18789 --verbose
 In a new terminal, send a test message:
 
 ```bash
-clawdbot message send --target +15555550123 --message "Hello from Clawdbot"
+sendell message send --target +15555550123 --message "Hello from Sendell"
 ```
 
-If `clawdbot health` shows “no auth configured”, go back to the wizard and set OAuth/key auth — the agent won’t be able to respond without it.
+If `sendell health` shows “no auth configured”, go back to the wizard and set OAuth/key auth — the agent won’t be able to respond without it.
 
-Tip: `clawdbot status --all` is the best pasteable, read-only debug report.
-Health probes: `clawdbot health` (or `clawdbot status --deep`) asks the running gateway for a health snapshot.
+Tip: `sendell status --all` is the best pasteable, read-only debug report.
+Health probes: `sendell health` (or `sendell status --deep`) asks the running gateway for a health snapshot.
 
 ## Next steps (optional, but great)
 

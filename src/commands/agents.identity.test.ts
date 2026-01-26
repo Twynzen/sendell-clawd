@@ -29,7 +29,7 @@ const runtime: RuntimeEnv = {
 };
 
 const baseSnapshot = {
-  path: "/tmp/clawdbot.json",
+  path: "/tmp/sendell.json",
   exists: true,
   raw: "{}",
   parsed: {},
@@ -49,16 +49,16 @@ describe("agents set-identity command", () => {
   });
 
   it("sets identity from workspace IDENTITY.md", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "clawdbot-identity-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-identity-"));
     const workspace = path.join(root, "work");
     await fs.mkdir(workspace, { recursive: true });
     await fs.writeFile(
       path.join(workspace, "IDENTITY.md"),
       [
-        "- Name: Clawd",
+        "- Name: Sendell",
         "- Creature: helpful sloth",
         "- Emoji: :)",
-        "- Avatar: avatars/clawd.png",
+        "- Avatar: avatars/sendell.png",
         "",
       ].join("\n"),
       "utf-8",
@@ -84,15 +84,15 @@ describe("agents set-identity command", () => {
     };
     const main = written.agents?.list?.find((entry) => entry.id === "main");
     expect(main?.identity).toEqual({
-      name: "Clawd",
+      name: "Sendell",
       theme: "helpful sloth",
       emoji: ":)",
-      avatar: "avatars/clawd.png",
+      avatar: "avatars/sendell.png",
     });
   });
 
   it("errors when multiple agents match the same workspace", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "clawdbot-identity-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-identity-"));
     const workspace = path.join(root, "shared");
     await fs.mkdir(workspace, { recursive: true });
     await fs.writeFile(path.join(workspace, "IDENTITY.md"), "- Name: Echo\n", "utf-8");
@@ -117,16 +117,16 @@ describe("agents set-identity command", () => {
   });
 
   it("overrides identity file values with explicit flags", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "clawdbot-identity-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-identity-"));
     const workspace = path.join(root, "work");
     await fs.mkdir(workspace, { recursive: true });
     await fs.writeFile(
       path.join(workspace, "IDENTITY.md"),
       [
-        "- Name: Clawd",
-        "- Theme: space lobster",
+        "- Name: Sendell",
+        "- Theme: spiritual guide",
         "- Emoji: :)",
-        "- Avatar: avatars/clawd.png",
+        "- Avatar: avatars/sendell.png",
         "",
       ].join("\n"),
       "utf-8",
@@ -154,14 +154,14 @@ describe("agents set-identity command", () => {
     const main = written.agents?.list?.find((entry) => entry.id === "main");
     expect(main?.identity).toEqual({
       name: "Nova",
-      theme: "space lobster",
+      theme: "spiritual guide",
       emoji: "🦞",
       avatar: "https://example.com/override.png",
     });
   });
 
   it("reads identity from an explicit IDENTITY.md path", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "clawdbot-identity-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-identity-"));
     const workspace = path.join(root, "work");
     const identityPath = path.join(workspace, "IDENTITY.md");
     await fs.mkdir(workspace, { recursive: true });
@@ -197,7 +197,7 @@ describe("agents set-identity command", () => {
   });
 
   it("accepts avatar-only identity from IDENTITY.md", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "clawdbot-identity-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-identity-"));
     const workspace = path.join(root, "work");
     await fs.mkdir(workspace, { recursive: true });
     await fs.writeFile(
@@ -243,7 +243,7 @@ describe("agents set-identity command", () => {
   });
 
   it("errors when identity data is missing", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "clawdbot-identity-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-identity-"));
     const workspace = path.join(root, "work");
     await fs.mkdir(workspace, { recursive: true });
 

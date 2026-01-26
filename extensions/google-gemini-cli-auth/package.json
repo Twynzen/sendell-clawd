@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/google-gemini-cli-auth",
+  "name": "@sendell/google-gemini-cli-auth",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Gemini CLI OAuth provider plugin",
-  "clawdbot": {
+  "description": "Sendell Gemini CLI OAuth provider plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

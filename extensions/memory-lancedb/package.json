@@ -1,14 +1,14 @@
 {
-  "name": "@clawdbot/memory-lancedb",
+  "name": "@sendell/memory-lancedb",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot LanceDB-backed long-term memory plugin with auto-recall/capture",
+  "description": "Sendell LanceDB-backed long-term memory plugin with auto-recall/capture",
   "dependencies": {
     "@lancedb/lancedb": "^0.23.0",
     "@sinclair/typebox": "0.34.47",
     "openai": "^6.16.0"
   },
-  "clawdbot": {
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

@@ -314,21 +314,21 @@ importers:
         specifier: ^10.5.0
         version: 10.5.0
     devDependencies:
-      clawdbot:
+      sendell:
         specifier: workspace:*
         version: link:../..
+
+  extensions/guide: {}
 
   extensions/imessage: {}
 
   extensions/line:
     devDependencies:
-      clawdbot:
+      sendell:
         specifier: workspace:*
         version: link:../..
 
   extensions/llm-task: {}
-
-  extensions/lobster: {}
 
   extensions/matrix:
     dependencies:
@@ -348,7 +348,7 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
-      clawdbot:
+      sendell:
         specifier: workspace:*
         version: link:../..
 
@@ -356,8 +356,8 @@ importers:
 
   extensions/memory-core:
     dependencies:
-      clawdbot:
-        specifier: '>=2026.1.25'
+      sendell:
+        specifier: workspace:*
         version: link:../..
 
   extensions/memory-lancedb:
@@ -383,26 +383,26 @@ importers:
       '@microsoft/agents-hosting-extensions-teams':
         specifier: ^1.2.2
         version: 1.2.2
-      clawdbot:
-        specifier: workspace:*
-        version: link:../..
       express:
         specifier: ^5.2.1
         version: 5.2.1
       proper-lockfile:
         specifier: ^4.1.2
         version: 4.1.2
+      sendell:
+        specifier: workspace:*
+        version: link:../..
 
   extensions/nextcloud-talk: {}
 
   extensions/nostr:
     dependencies:
-      clawdbot:
-        specifier: workspace:*
-        version: link:../..
       nostr-tools:
         specifier: ^2.20.0
         version: 2.20.0(typescript@5.9.3)
+      sendell:
+        specifier: workspace:*
+        version: link:../..
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -440,7 +440,7 @@ importers:
 
   extensions/zalo:
     dependencies:
-      clawdbot:
+      sendell:
         specifier: workspace:*
         version: link:../..
       undici:
@@ -452,7 +452,7 @@ importers:
       '@sinclair/typebox':
         specifier: 0.34.47
         version: 0.34.47
-      clawdbot:
+      sendell:
         specifier: workspace:*
         version: link:../..
 

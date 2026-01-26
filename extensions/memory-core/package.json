@@ -1,14 +1,14 @@
 {
-  "name": "@clawdbot/memory-core",
+  "name": "@sendell/memory-core",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot core memory search plugin",
-  "clawdbot": {
+  "description": "Sendell core memory search plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]
   },
   "peerDependencies": {
-    "clawdbot": ">=2026.1.25"
+    "sendell": "workspace:*"
   }
 }

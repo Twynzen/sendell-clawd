@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/google-antigravity-auth",
+  "name": "@sendell/google-antigravity-auth",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Google Antigravity OAuth provider plugin",
-  "clawdbot": {
+  "description": "Sendell Google Antigravity OAuth provider plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

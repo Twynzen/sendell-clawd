@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/googlechat",
+  "name": "@sendell/googlechat",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Google Chat channel plugin",
-  "clawdbot": {
+  "description": "Sendell Google Chat channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ],
@@ -22,7 +22,7 @@
       "order": 55
     },
     "install": {
-      "npmSpec": "@clawdbot/googlechat",
+      "npmSpec": "@sendell/googlechat",
       "localPath": "extensions/googlechat",
       "defaultChoice": "npm"
     }
@@ -31,9 +31,9 @@
     "google-auth-library": "^10.5.0"
   },
   "devDependencies": {
-    "clawdbot": "workspace:*"
+    "sendell": "workspace:*"
   },
   "peerDependencies": {
-    "clawdbot": ">=2026.1.25"
+    "sendell": ">=2026.1.25"
   }
 }

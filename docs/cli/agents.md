@@ -1,10 +1,10 @@
 ---
-summary: "CLI reference for `clawdbot agents` (list/add/delete/set identity)"
+summary: "CLI reference for `sendell agents` (list/add/delete/set identity)"
 read_when:
   - You want multiple isolated agents (workspaces + routing + auth)
 ---
 
-# `clawdbot agents`
+# `sendell agents`
 
 Manage isolated agents (workspaces + auth + routing).
 
@@ -15,17 +15,17 @@ Related:
 ## Examples
 
 ```bash
-clawdbot agents list
-clawdbot agents add work --workspace ~/clawd-work
-clawdbot agents set-identity --workspace ~/clawd --from-identity
-clawdbot agents set-identity --agent main --avatar avatars/clawd.png
-clawdbot agents delete work
+sendell agents list
+sendell agents add work --workspace ~/sendell-work
+sendell agents set-identity --workspace ~/sendell --from-identity
+sendell agents set-identity --agent main --avatar avatars/sendell.png
+sendell agents delete work
 ```
 
 ## Identity files
 
 Each agent workspace can include an `IDENTITY.md` at the workspace root:
-- Example path: `~/clawd/IDENTITY.md`
+- Example path: `~/sendell/IDENTITY.md`
 - `set-identity --from-identity` reads from the workspace root (or an explicit `--identity-file`)
 
 Avatar paths resolve relative to the workspace root.
@@ -41,13 +41,13 @@ Avatar paths resolve relative to the workspace root.
 Load from `IDENTITY.md`:
 
 ```bash
-clawdbot agents set-identity --workspace ~/clawd --from-identity
+sendell agents set-identity --workspace ~/sendell --from-identity
 ```
 
 Override fields explicitly:
 
 ```bash
-clawdbot agents set-identity --agent main --name "Clawd" --emoji "🦞" --avatar avatars/clawd.png
+sendell agents set-identity --agent main --name "Sendell" --emoji "🦞" --avatar avatars/sendell.png
 ```
 
 Config sample:
@@ -59,10 +59,10 @@ Config sample:
       {
         id: "main",
         identity: {
-          name: "Clawd",
-          theme: "space lobster",
+          name: "Sendell",
+          theme: "spiritual guide",
           emoji: "🦞",
-          avatar: "avatars/clawd.png"
+          avatar: "avatars/sendell.png"
         }
       }
     ]

@@ -1,15 +1,15 @@
 ---
-summary: "CLI reference for `clawdbot docs` (search the live docs index)"
+summary: "CLI reference for `sendell docs` (search the live docs index)"
 read_when:
-  - You want to search the live Clawdbot docs from the terminal
+  - You want to search the live Sendell docs from the terminal
 ---
 
-# `clawdbot docs`
+# `sendell docs`
 
 Search the live docs index.
 
 ```bash
-clawdbot docs browser extension
-clawdbot docs sandbox allowHostControl
+sendell docs browser extension
+sendell docs sandbox allowHostControl
 ```
 

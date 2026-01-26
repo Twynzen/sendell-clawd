@@ -1,4 +1,4 @@
-const DEFAULT_TAGLINE = "All your chats, one Clawdbot.";
+const DEFAULT_TAGLINE = "All your chats, one Sendell.";
 
 const HOLIDAY_TAGLINES = {
   newYear:
@@ -60,7 +60,7 @@ const TAGLINES: string[] = [
   "I don't just autocomplete—I auto-commit (emotionally), then ask you to review (logically).",
   'Less clicking, more shipping, fewer "where did that file go" moments.',
   "Claws out, commit in—let's ship something mildly responsible.",
-  "I'll butter your workflow like a lobster roll: messy, delicious, effective.",
+  "I'll butter your workflow like a guide roll: messy, delicious, effective.",
   "Shell yeah—I'm here to pinch the toil and leave you the glory.",
   "If it's repetitive, I'll automate it; if it's hard, I'll bring jokes and a rollback plan.",
   "Because texting yourself reminders is so 2024.",
@@ -241,7 +241,7 @@ export function activeTaglines(options: TaglineOptions = {}): string[] {
 
 export function pickTagline(options: TaglineOptions = {}): string {
   const env = options.env ?? process.env;
-  const override = env?.CLAWDBOT_TAGLINE_INDEX;
+  const override = env?.SENDELL_TAGLINE_INDEX;
   if (override !== undefined) {
     const parsed = Number.parseInt(override, 10);
     if (!Number.isNaN(parsed) && parsed >= 0) {

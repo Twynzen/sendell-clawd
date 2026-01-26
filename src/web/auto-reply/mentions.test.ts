@@ -23,7 +23,7 @@ describe("isBotMentionedFromTargets", () => {
 
   it("ignores regex matches when other mentions are present", () => {
     const msg = makeMsg({
-      body: "@Clawd please help",
+      body: "@Sendell please help",
       mentionedJids: ["19998887777@s.whatsapp.net"],
       selfE164: "+15551234567",
       selfJid: "15551234567@s.whatsapp.net",
@@ -45,7 +45,7 @@ describe("isBotMentionedFromTargets", () => {
 
   it("falls back to regex when no mentions are present", () => {
     const msg = makeMsg({
-      body: "clawd can you help?",
+      body: "sendell can you help?",
       selfE164: "+15551234567",
       selfJid: "15551234567@s.whatsapp.net",
     });

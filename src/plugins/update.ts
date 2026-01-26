@@ -1,9 +1,9 @@
 import fs from "node:fs/promises";
 
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import type { UpdateChannel } from "../infra/update-channels.js";
 import { resolveUserPath } from "../utils.js";
-import { discoverClawdbotPlugins } from "./discovery.js";
+import { discoverSendellPlugins } from "./discovery.js";
 import { installPluginFromNpmSpec, resolvePluginInstallDir } from "./install.js";
 import { recordPluginInstall } from "./installs.js";
 import { loadPluginManifest } from "./manifest.js";
@@ -25,7 +25,7 @@ export type PluginUpdateOutcome = {
 };
 
 export type PluginUpdateSummary = {
-  config: ClawdbotConfig;
+  config: SendellConfig;
   changed: boolean;
   outcomes: PluginUpdateOutcome[];
 };
@@ -38,7 +38,7 @@ export type PluginChannelSyncSummary = {
 };
 
 export type PluginChannelSyncResult = {
-  config: ClawdbotConfig;
+  config: SendellConfig;
   changed: boolean;
   summary: PluginChannelSyncSummary;
 };
@@ -62,7 +62,7 @@ async function readInstalledPackageVersion(dir: string): Promise<string | undefi
 function resolveBundledPluginSources(params: {
   workspaceDir?: string;
 }): Map<string, BundledPluginSource> {
-  const discovery = discoverClawdbotPlugins({ workspaceDir: params.workspaceDir });
+  const discovery = discoverSendellPlugins({ workspaceDir: params.workspaceDir });
   const bundled = new Map<string, BundledPluginSource>();
 
   for (const candidate of discovery.candidates) {
@@ -73,7 +73,7 @@ function resolveBundledPluginSources(params: {
     if (bundled.has(pluginId)) continue;
 
     const npmSpec =
-      candidate.packageClawdbot?.install?.npmSpec?.trim() ||
+      candidate.packageSendell?.install?.npmSpec?.trim() ||
       candidate.packageName?.trim() ||
       undefined;
 
@@ -127,7 +127,7 @@ function buildLoadPathHelpers(existing: string[]) {
 }
 
 export async function updateNpmInstalledPlugins(params: {
-  config: ClawdbotConfig;
+  config: SendellConfig;
   logger?: PluginUpdateLogger;
   pluginIds?: string[];
   skipIds?: Set<string>;
@@ -290,7 +290,7 @@ export async function updateNpmInstalledPlugins(params: {
 }
 
 export async function syncPluginsForUpdateChannel(params: {
-  config: ClawdbotConfig;
+  config: SendellConfig;
   channel: UpdateChannel;
   workspaceDir?: string;
   logger?: PluginUpdateLogger;

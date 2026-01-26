@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "./config.js";
+import type { SendellConfig } from "./config.js";
 import {
   getChatChannelMeta,
   listChatChannels,
@@ -17,7 +17,7 @@ type PluginEnableChange = {
 };
 
 export type PluginAutoEnableResult = {
-  config: ClawdbotConfig;
+  config: SendellConfig;
   changes: string[];
 };
 
@@ -59,7 +59,7 @@ function accountsHaveKeys(value: unknown, keys: string[]): boolean {
 }
 
 function resolveChannelConfig(
-  cfg: ClawdbotConfig,
+  cfg: SendellConfig,
   channelId: string,
 ): Record<string, unknown> | null {
   const channels = cfg.channels as Record<string, unknown> | undefined;
@@ -67,7 +67,7 @@ function resolveChannelConfig(
   return isRecord(entry) ? entry : null;
 }
 
-function isTelegramConfigured(cfg: ClawdbotConfig, env: NodeJS.ProcessEnv): boolean {
+function isTelegramConfigured(cfg: SendellConfig, env: NodeJS.ProcessEnv): boolean {
   if (hasNonEmptyString(env.TELEGRAM_BOT_TOKEN)) return true;
   const entry = resolveChannelConfig(cfg, "telegram");
   if (!entry) return false;
@@ -76,7 +76,7 @@ function isTelegramConfigured(cfg: ClawdbotConfig, env: NodeJS.ProcessEnv): bool
   return recordHasKeys(entry);
 }
 
-function isDiscordConfigured(cfg: ClawdbotConfig, env: NodeJS.ProcessEnv): boolean {
+function isDiscordConfigured(cfg: SendellConfig, env: NodeJS.ProcessEnv): boolean {
   if (hasNonEmptyString(env.DISCORD_BOT_TOKEN)) return true;
   const entry = resolveChannelConfig(cfg, "discord");
   if (!entry) return false;
@@ -85,7 +85,7 @@ function isDiscordConfigured(cfg: ClawdbotConfig, env: NodeJS.ProcessEnv): boole
   return recordHasKeys(entry);
 }
 
-function isSlackConfigured(cfg: ClawdbotConfig, env: NodeJS.ProcessEnv): boolean {
+function isSlackConfigured(cfg: SendellConfig, env: NodeJS.ProcessEnv): boolean {
   if (
     hasNonEmptyString(env.SLACK_BOT_TOKEN) ||
     hasNonEmptyString(env.SLACK_APP_TOKEN) ||
@@ -106,7 +106,7 @@ function isSlackConfigured(cfg: ClawdbotConfig, env: NodeJS.ProcessEnv): boolean
   return recordHasKeys(entry);
 }
 
-function isSignalConfigured(cfg: ClawdbotConfig): boolean {
+function isSignalConfigured(cfg: SendellConfig): boolean {
   const entry = resolveChannelConfig(cfg, "signal");
   if (!entry) return false;
   if (
@@ -122,27 +122,27 @@ function isSignalConfigured(cfg: ClawdbotConfig): boolean {
   return recordHasKeys(entry);
 }
 
-function isIMessageConfigured(cfg: ClawdbotConfig): boolean {
+function isIMessageConfigured(cfg: SendellConfig): boolean {
   const entry = resolveChannelConfig(cfg, "imessage");
   if (!entry) return false;
   if (hasNonEmptyString(entry.cliPath)) return true;
   return recordHasKeys(entry);
 }
 
-function isWhatsAppConfigured(cfg: ClawdbotConfig): boolean {
+function isWhatsAppConfigured(cfg: SendellConfig): boolean {
   if (hasAnyWhatsAppAuth(cfg)) return true;
   const entry = resolveChannelConfig(cfg, "whatsapp");
   if (!entry) return false;
   return recordHasKeys(entry);
 }
 
-function isGenericChannelConfigured(cfg: ClawdbotConfig, channelId: string): boolean {
+function isGenericChannelConfigured(cfg: SendellConfig, channelId: string): boolean {
   const entry = resolveChannelConfig(cfg, channelId);
   return recordHasKeys(entry);
 }
 
 export function isChannelConfigured(
-  cfg: ClawdbotConfig,
+  cfg: SendellConfig,
   channelId: string,
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
@@ -164,7 +164,7 @@ export function isChannelConfigured(
   }
 }
 
-function collectModelRefs(cfg: ClawdbotConfig): string[] {
+function collectModelRefs(cfg: SendellConfig): string[] {
   const refs: string[] = [];
   const pushModelRef = (value: unknown) => {
     if (typeof value === "string" && value.trim()) refs.push(value.trim());
@@ -208,7 +208,7 @@ function extractProviderFromModelRef(value: string): string | null {
   return normalizeProviderId(trimmed.slice(0, slash));
 }
 
-function isProviderConfigured(cfg: ClawdbotConfig, providerId: string): boolean {
+function isProviderConfigured(cfg: SendellConfig, providerId: string): boolean {
   const normalized = normalizeProviderId(providerId);
 
   const profiles = cfg.auth?.profiles;
@@ -237,7 +237,7 @@ function isProviderConfigured(cfg: ClawdbotConfig, providerId: string): boolean 
 }
 
 function resolveConfiguredPlugins(
-  cfg: ClawdbotConfig,
+  cfg: SendellConfig,
   env: NodeJS.ProcessEnv,
 ): PluginEnableChange[] {
   const changes: PluginEnableChange[] = [];
@@ -269,12 +269,12 @@ function resolveConfiguredPlugins(
   return changes;
 }
 
-function isPluginExplicitlyDisabled(cfg: ClawdbotConfig, pluginId: string): boolean {
+function isPluginExplicitlyDisabled(cfg: SendellConfig, pluginId: string): boolean {
   const entry = cfg.plugins?.entries?.[pluginId];
   return entry?.enabled === false;
 }
 
-function isPluginDenied(cfg: ClawdbotConfig, pluginId: string): boolean {
+function isPluginDenied(cfg: SendellConfig, pluginId: string): boolean {
   const deny = cfg.plugins?.deny;
   return Array.isArray(deny) && deny.includes(pluginId);
 }
@@ -289,7 +289,7 @@ function resolvePreferredOverIds(pluginId: string): string[] {
 }
 
 function shouldSkipPreferredPluginAutoEnable(
-  cfg: ClawdbotConfig,
+  cfg: SendellConfig,
   entry: PluginEnableChange,
   configured: PluginEnableChange[],
 ): boolean {
@@ -305,7 +305,7 @@ function shouldSkipPreferredPluginAutoEnable(
   return false;
 }
 
-function ensureAllowlisted(cfg: ClawdbotConfig, pluginId: string): ClawdbotConfig {
+function ensureAllowlisted(cfg: SendellConfig, pluginId: string): SendellConfig {
   const allow = cfg.plugins?.allow;
   if (!Array.isArray(allow) || allow.includes(pluginId)) return cfg;
   return {
@@ -317,7 +317,7 @@ function ensureAllowlisted(cfg: ClawdbotConfig, pluginId: string): ClawdbotConfi
   };
 }
 
-function enablePluginEntry(cfg: ClawdbotConfig, pluginId: string): ClawdbotConfig {
+function enablePluginEntry(cfg: SendellConfig, pluginId: string): SendellConfig {
   const entries = {
     ...cfg.plugins?.entries,
     [pluginId]: {
@@ -346,7 +346,7 @@ function formatAutoEnableChange(entry: PluginEnableChange): string {
 }
 
 export function applyPluginAutoEnable(params: {
-  config: ClawdbotConfig;
+  config: SendellConfig;
   env?: NodeJS.ProcessEnv;
 }): PluginAutoEnableResult {
   const env = params.env ?? process.env;

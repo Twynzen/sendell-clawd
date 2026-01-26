@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "../../config/config.js";
+import type { SendellConfig } from "../../config/config.js";
 import type { DmPolicy } from "../../config/types.js";
 import type { RuntimeEnv } from "../../runtime.js";
 import type { WizardPrompter } from "../../wizard/prompts.js";
@@ -23,11 +23,11 @@ export type SetupChannelsOptions = {
 };
 
 export type PromptAccountIdParams = {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   prompter: WizardPrompter;
   label: string;
   currentId?: string;
-  listAccountIds: (cfg: ClawdbotConfig) => string[];
+  listAccountIds: (cfg: SendellConfig) => string[];
   defaultAccountId: string;
 };
 
@@ -42,13 +42,13 @@ export type ChannelOnboardingStatus = {
 };
 
 export type ChannelOnboardingStatusContext = {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   options?: SetupChannelsOptions;
   accountOverrides: Partial<Record<ChannelId, string>>;
 };
 
 export type ChannelOnboardingConfigureContext = {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   runtime: RuntimeEnv;
   prompter: WizardPrompter;
   options?: SetupChannelsOptions;
@@ -58,7 +58,7 @@ export type ChannelOnboardingConfigureContext = {
 };
 
 export type ChannelOnboardingResult = {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   accountId?: string;
 };
 
@@ -67,13 +67,13 @@ export type ChannelOnboardingDmPolicy = {
   channel: ChannelId;
   policyKey: string;
   allowFromKey: string;
-  getCurrent: (cfg: ClawdbotConfig) => DmPolicy;
-  setPolicy: (cfg: ClawdbotConfig, policy: DmPolicy) => ClawdbotConfig;
+  getCurrent: (cfg: SendellConfig) => DmPolicy;
+  setPolicy: (cfg: SendellConfig, policy: DmPolicy) => SendellConfig;
   promptAllowFrom?: (params: {
-    cfg: ClawdbotConfig;
+    cfg: SendellConfig;
     prompter: WizardPrompter;
     accountId?: string;
-  }) => Promise<ClawdbotConfig>;
+  }) => Promise<SendellConfig>;
 };
 
 export type ChannelOnboardingAdapter = {
@@ -82,5 +82,5 @@ export type ChannelOnboardingAdapter = {
   configure: (ctx: ChannelOnboardingConfigureContext) => Promise<ChannelOnboardingResult>;
   dmPolicy?: ChannelOnboardingDmPolicy;
   onAccountRecorded?: (accountId: string, options?: SetupChannelsOptions) => void;
-  disable?: (cfg: ClawdbotConfig) => ClawdbotConfig;
+  disable?: (cfg: SendellConfig) => SendellConfig;
 };

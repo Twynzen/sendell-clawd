@@ -76,7 +76,7 @@ export function registerChannelsCli(program: Command) {
       () =>
         `\n${theme.muted("Docs:")} ${formatDocsLink(
           "/cli/channels",
-          "docs.clawd.bot/cli/channels",
+          "docs.sendell.bot/cli/channels",
         )}\n`,
     );
 

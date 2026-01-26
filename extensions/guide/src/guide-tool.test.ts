@@ -4,39 +4,39 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import type { ClawdbotPluginApi, ClawdbotPluginToolContext } from "../../../src/plugins/types.js";
-import { createLobsterTool } from "./lobster-tool.js";
+import type { SendellPluginApi, SendellPluginToolContext } from "../../../src/plugins/types.js";
+import { createGuideTool } from "./guide-tool.js";
 
-async function writeFakeLobsterScript(scriptBody: string, prefix = "clawdbot-lobster-plugin-") {
+async function writeFakeGuideScript(scriptBody: string, prefix = "sendell-guide-plugin-") {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
   const isWindows = process.platform === "win32";
 
   if (isWindows) {
-    const scriptPath = path.join(dir, "lobster.js");
-    const cmdPath = path.join(dir, "lobster.cmd");
+    const scriptPath = path.join(dir, "guide.js");
+    const cmdPath = path.join(dir, "guide.cmd");
     await fs.writeFile(scriptPath, scriptBody, { encoding: "utf8" });
     const cmd = `@echo off\r\n"${process.execPath}" "${scriptPath}" %*\r\n`;
     await fs.writeFile(cmdPath, cmd, { encoding: "utf8" });
     return { dir, binPath: cmdPath };
   }
 
-  const binPath = path.join(dir, "lobster");
+  const binPath = path.join(dir, "guide");
   const file = `#!/usr/bin/env node\n${scriptBody}\n`;
   await fs.writeFile(binPath, file, { encoding: "utf8", mode: 0o755 });
   return { dir, binPath };
 }
 
-async function writeFakeLobster(params: { payload: unknown }) {
+async function writeFakeGuide(params: { payload: unknown }) {
   const scriptBody =
     `const payload = ${JSON.stringify(params.payload)};\n` +
     `process.stdout.write(JSON.stringify(payload));\n`;
-  return await writeFakeLobsterScript(scriptBody);
+  return await writeFakeGuideScript(scriptBody);
 }
 
-function fakeApi(): ClawdbotPluginApi {
+function fakeApi(): SendellPluginApi {
   return {
-    id: "lobster",
-    name: "lobster",
+    id: "guide",
+    name: "guide",
     source: "test",
     config: {} as any,
     runtime: { version: "test" } as any,
@@ -52,7 +52,7 @@ function fakeApi(): ClawdbotPluginApi {
   };
 }
 
-function fakeCtx(overrides: Partial<ClawdbotPluginToolContext> = {}): ClawdbotPluginToolContext {
+function fakeCtx(overrides: Partial<SendellPluginToolContext> = {}): SendellPluginToolContext {
   return {
     config: {} as any,
     workspaceDir: "/tmp",
@@ -66,58 +66,58 @@ function fakeCtx(overrides: Partial<ClawdbotPluginToolContext> = {}): ClawdbotPl
   };
 }
 
-describe("lobster plugin tool", () => {
-  it("runs lobster and returns parsed envelope in details", async () => {
-    const fake = await writeFakeLobster({
+describe("guide plugin tool", () => {
+  it("runs guide and returns parsed envelope in details", async () => {
+    const fake = await writeFakeGuide({
       payload: { ok: true, status: "ok", output: [{ hello: "world" }], requiresApproval: null },
     });
 
-    const tool = createLobsterTool(fakeApi());
+    const tool = createGuideTool(fakeApi());
     const res = await tool.execute("call1", {
       action: "run",
       pipeline: "noop",
-      lobsterPath: fake.binPath,
+      guidePath: fake.binPath,
       timeoutMs: 1000,
     });
 
     expect(res.details).toMatchObject({ ok: true, status: "ok" });
   });
 
-  it("requires absolute lobsterPath when provided", async () => {
-    const tool = createLobsterTool(fakeApi());
+  it("requires absolute guidePath when provided", async () => {
+    const tool = createGuideTool(fakeApi());
     await expect(
       tool.execute("call2", {
         action: "run",
         pipeline: "noop",
-        lobsterPath: "./lobster",
+        guidePath: "./guide",
       }),
     ).rejects.toThrow(/absolute path/);
   });
 
-  it("rejects invalid JSON from lobster", async () => {
-    const { binPath } = await writeFakeLobsterScript(
+  it("rejects invalid JSON from guide", async () => {
+    const { binPath } = await writeFakeGuideScript(
       `process.stdout.write("nope");\n`,
-      "clawdbot-lobster-plugin-bad-",
+      "sendell-guide-plugin-bad-",
     );
 
-    const tool = createLobsterTool(fakeApi());
+    const tool = createGuideTool(fakeApi());
     await expect(
       tool.execute("call3", {
         action: "run",
         pipeline: "noop",
-        lobsterPath: binPath,
+        guidePath: binPath,
       }),
     ).rejects.toThrow(/invalid JSON/);
   });
 
   it("can be gated off in sandboxed contexts", async () => {
     const api = fakeApi();
-    const factoryTool = (ctx: ClawdbotPluginToolContext) => {
+    const factoryTool = (ctx: SendellPluginToolContext) => {
       if (ctx.sandboxed) return null;
-      return createLobsterTool(api);
+      return createGuideTool(api);
     };
 
     expect(factoryTool(fakeCtx({ sandboxed: true }))).toBeNull();
-    expect(factoryTool(fakeCtx({ sandboxed: false }))?.name).toBe("lobster");
+    expect(factoryTool(fakeCtx({ sandboxed: false }))?.name).toBe("guide");
   });
 });

@@ -10,15 +10,15 @@ import { acquireGatewayLock, GatewayLockError } from "./gateway-lock.js";
 import { resolveConfigPath, resolveGatewayLockDir, resolveStateDir } from "../config/paths.js";
 
 async function makeEnv() {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "clawdbot-gateway-lock-"));
-  const configPath = path.join(dir, "clawdbot.json");
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-gateway-lock-"));
+  const configPath = path.join(dir, "sendell.json");
   await fs.writeFile(configPath, "{}", "utf8");
   await fs.mkdir(resolveGatewayLockDir(), { recursive: true });
   return {
     env: {
       ...process.env,
-      CLAWDBOT_STATE_DIR: dir,
-      CLAWDBOT_CONFIG_PATH: configPath,
+      SENDELL_STATE_DIR: dir,
+      SENDELL_CONFIG_PATH: configPath,
     },
     cleanup: async () => {
       await fs.rm(dir, { recursive: true, force: true });

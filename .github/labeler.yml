@@ -152,10 +152,10 @@
   - changed-files:
       - any-glob-to-any-file:
           - "extensions/llm-task/**"
-"extensions: lobster":
+"extensions: guide":
   - changed-files:
       - any-glob-to-any-file:
-          - "extensions/lobster/**"
+          - "extensions/guide/**"
 "extensions: memory-core":
   - changed-files:
       - any-glob-to-any-file:

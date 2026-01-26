@@ -1,5 +1,5 @@
 import { resolveDefaultAgentId } from "../agents/agent-scope.js";
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import { listBindings } from "./bindings.js";
 import {
   buildAgentMainSessionKey,
@@ -18,7 +18,7 @@ export type RoutePeer = {
 };
 
 export type ResolveAgentRouteInput = {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   channel: string;
   accountId?: string | null;
   peer?: RoutePeer | null;
@@ -87,12 +87,12 @@ export function buildAgentSessionKey(params: {
   });
 }
 
-function listAgents(cfg: ClawdbotConfig) {
+function listAgents(cfg: SendellConfig) {
   const agents = cfg.agents?.list;
   return Array.isArray(agents) ? agents : [];
 }
 
-function pickFirstExistingAgentId(cfg: ClawdbotConfig, agentId: string): string {
+function pickFirstExistingAgentId(cfg: SendellConfig, agentId: string): string {
   const trimmed = (agentId ?? "").trim();
   if (!trimmed) return sanitizeAgentId(resolveDefaultAgentId(cfg));
   const normalized = normalizeAgentId(trimmed);

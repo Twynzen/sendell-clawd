@@ -126,7 +126,7 @@ describe("enableConsoleCapture", () => {
 });
 
 function tempLogPath() {
-  return path.join(os.tmpdir(), `clawdbot-log-${crypto.randomUUID()}.log`);
+  return path.join(os.tmpdir(), `sendell-log-${crypto.randomUUID()}.log`);
 }
 
 function eioError() {

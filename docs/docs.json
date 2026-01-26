@@ -1,23 +1,23 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Clawdbot",
+  "name": "Sendell",
   "theme": "mint",
   "logo": {
-    "light": "/assets/pixel-lobster.svg",
-    "dark": "/assets/pixel-lobster.svg"
+    "light": "/assets/pixel-guide.svg",
+    "dark": "/assets/pixel-guide.svg"
   },
-  "favicon": "/assets/pixel-lobster.svg",
+  "favicon": "/assets/pixel-guide.svg",
   "colors": {
     "primary": "#FF5A36"
   },
   "topbarLinks": [
     {
       "name": "GitHub",
-      "url": "https://github.com/clawdbot/clawdbot"
+      "url": "https://github.com/sendell/sendell"
     },
     {
       "name": "Releases",
-      "url": "https://github.com/clawdbot/clawdbot/releases"
+      "url": "https://github.com/sendell/sendell/releases"
     }
   ],
   "redirects": [
@@ -338,8 +338,8 @@
       "destination": "/nodes/camera"
     },
     {
-      "source": "/clawd",
-      "destination": "/start/clawd"
+      "source": "/sendell",
+      "destination": "/start/sendell"
     },
     {
       "source": "/clawdhub",
@@ -808,7 +808,7 @@
           "start/wizard",
           "start/setup",
           "start/pairing",
-          "start/clawd",
+          "start/sendell",
           "start/showcase",
           "start/hubs",
           "start/onboarding",
@@ -1017,7 +1017,7 @@
         "group": "Tools & Skills",
         "pages": [
           "tools",
-          "tools/lobster",
+          "tools/guide",
           "tools/llm-task",
           "plugin",
           "plugins/voice-call",

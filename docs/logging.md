@@ -8,7 +8,7 @@ read_when:
 
 # Logging
 
-Clawdbot logs in two places:
+Sendell logs in two places:
 
 - **File logs** (JSON lines) written by the Gateway.
 - **Console output** shown in terminals and the Control UI.
@@ -20,16 +20,16 @@ levels and formats.
 
 By default, the Gateway writes a rolling log file under:
 
-`/tmp/clawdbot/clawdbot-YYYY-MM-DD.log`
+`/tmp/sendell/sendell-YYYY-MM-DD.log`
 
 The date uses the gateway host's local timezone.
 
-You can override this in `~/.clawdbot/clawdbot.json`:
+You can override this in `~/.sendell/sendell.json`:
 
 ```json
 {
   "logging": {
-    "file": "/path/to/clawdbot.log"
+    "file": "/path/to/sendell.log"
   }
 }
 ```
@@ -41,7 +41,7 @@ You can override this in `~/.clawdbot/clawdbot.json`:
 Use the CLI to tail the gateway log file via RPC:
 
 ```bash
-clawdbot logs --follow
+sendell logs --follow
 ```
 
 Output modes:
@@ -62,7 +62,7 @@ In JSON mode, the CLI emits `type`-tagged objects:
 If the Gateway is unreachable, the CLI prints a short hint to run:
 
 ```bash
-clawdbot doctor
+sendell doctor
 ```
 
 ### Control UI (web)
@@ -75,7 +75,7 @@ See [/web/control-ui](/web/control-ui) for how to open it.
 To filter channel activity (WhatsApp/Telegram/etc), use:
 
 ```bash
-clawdbot channels logs --channel whatsapp
+sendell channels logs --channel whatsapp
 ```
 
 ## Log formats
@@ -97,13 +97,13 @@ Console formatting is controlled by `logging.consoleStyle`.
 
 ## Configuring logging
 
-All logging configuration lives under `logging` in `~/.clawdbot/clawdbot.json`.
+All logging configuration lives under `logging` in `~/.sendell/sendell.json`.
 
 ```json
 {
   "logging": {
     "level": "info",
-    "file": "/tmp/clawdbot/clawdbot-YYYY-MM-DD.log",
+    "file": "/tmp/sendell/sendell-YYYY-MM-DD.log",
     "consoleLevel": "info",
     "consoleStyle": "pretty",
     "redactSensitive": "tools",
@@ -151,7 +151,7 @@ diagnostics + the exporter plugin are enabled.
 
 - **OpenTelemetry (OTel)**: the data model + SDKs for traces, metrics, and logs.
 - **OTLP**: the wire protocol used to export OTel data to a collector/backend.
-- Clawdbot exports via **OTLP/HTTP (protobuf)** today.
+- Sendell exports via **OTLP/HTTP (protobuf)** today.
 
 ### Signals exported
 
@@ -208,7 +208,7 @@ Flags are case-insensitive and support wildcards (e.g. `telegram.*` or `*`).
 Env override (one-off):
 
 ```
-CLAWDBOT_DIAGNOSTICS=telegram.http,telegram.payload
+SENDELL_DIAGNOSTICS=telegram.http,telegram.payload
 ```
 
 Notes:
@@ -237,7 +237,7 @@ works with any OpenTelemetry collector/backend that accepts OTLP/HTTP.
       "enabled": true,
       "endpoint": "http://otel-collector:4318",
       "protocol": "http/protobuf",
-      "serviceName": "clawdbot-gateway",
+      "serviceName": "sendell-gateway",
       "traces": true,
       "metrics": true,
       "logs": true,
@@ -249,7 +249,7 @@ works with any OpenTelemetry collector/backend that accepts OTLP/HTTP.
 ```
 
 Notes:
-- You can also enable the plugin with `clawdbot plugins enable diagnostics-otel`.
+- You can also enable the plugin with `sendell plugins enable diagnostics-otel`.
 - `protocol` currently supports `http/protobuf` only. `grpc` is ignored.
 - Metrics include token usage, cost, context size, run duration, and message-flow
   counters/histograms (webhooks, queueing, session state, queue depth/wait).
@@ -262,58 +262,58 @@ Notes:
 ### Exported metrics (names + types)
 
 Model usage:
-- `clawdbot.tokens` (counter, attrs: `clawdbot.token`, `clawdbot.channel`,
-  `clawdbot.provider`, `clawdbot.model`)
-- `clawdbot.cost.usd` (counter, attrs: `clawdbot.channel`, `clawdbot.provider`,
-  `clawdbot.model`)
-- `clawdbot.run.duration_ms` (histogram, attrs: `clawdbot.channel`,
-  `clawdbot.provider`, `clawdbot.model`)
-- `clawdbot.context.tokens` (histogram, attrs: `clawdbot.context`,
-  `clawdbot.channel`, `clawdbot.provider`, `clawdbot.model`)
+- `sendell.tokens` (counter, attrs: `sendell.token`, `sendell.channel`,
+  `sendell.provider`, `sendell.model`)
+- `sendell.cost.usd` (counter, attrs: `sendell.channel`, `sendell.provider`,
+  `sendell.model`)
+- `sendell.run.duration_ms` (histogram, attrs: `sendell.channel`,
+  `sendell.provider`, `sendell.model`)
+- `sendell.context.tokens` (histogram, attrs: `sendell.context`,
+  `sendell.channel`, `sendell.provider`, `sendell.model`)
 
 Message flow:
-- `clawdbot.webhook.received` (counter, attrs: `clawdbot.channel`,
-  `clawdbot.webhook`)
-- `clawdbot.webhook.error` (counter, attrs: `clawdbot.channel`,
-  `clawdbot.webhook`)
-- `clawdbot.webhook.duration_ms` (histogram, attrs: `clawdbot.channel`,
-  `clawdbot.webhook`)
-- `clawdbot.message.queued` (counter, attrs: `clawdbot.channel`,
-  `clawdbot.source`)
-- `clawdbot.message.processed` (counter, attrs: `clawdbot.channel`,
-  `clawdbot.outcome`)
-- `clawdbot.message.duration_ms` (histogram, attrs: `clawdbot.channel`,
-  `clawdbot.outcome`)
+- `sendell.webhook.received` (counter, attrs: `sendell.channel`,
+  `sendell.webhook`)
+- `sendell.webhook.error` (counter, attrs: `sendell.channel`,
+  `sendell.webhook`)
+- `sendell.webhook.duration_ms` (histogram, attrs: `sendell.channel`,
+  `sendell.webhook`)
+- `sendell.message.queued` (counter, attrs: `sendell.channel`,
+  `sendell.source`)
+- `sendell.message.processed` (counter, attrs: `sendell.channel`,
+  `sendell.outcome`)
+- `sendell.message.duration_ms` (histogram, attrs: `sendell.channel`,
+  `sendell.outcome`)
 
 Queues + sessions:
-- `clawdbot.queue.lane.enqueue` (counter, attrs: `clawdbot.lane`)
-- `clawdbot.queue.lane.dequeue` (counter, attrs: `clawdbot.lane`)
-- `clawdbot.queue.depth` (histogram, attrs: `clawdbot.lane` or
-  `clawdbot.channel=heartbeat`)
-- `clawdbot.queue.wait_ms` (histogram, attrs: `clawdbot.lane`)
-- `clawdbot.session.state` (counter, attrs: `clawdbot.state`, `clawdbot.reason`)
-- `clawdbot.session.stuck` (counter, attrs: `clawdbot.state`)
-- `clawdbot.session.stuck_age_ms` (histogram, attrs: `clawdbot.state`)
-- `clawdbot.run.attempt` (counter, attrs: `clawdbot.attempt`)
+- `sendell.queue.lane.enqueue` (counter, attrs: `sendell.lane`)
+- `sendell.queue.lane.dequeue` (counter, attrs: `sendell.lane`)
+- `sendell.queue.depth` (histogram, attrs: `sendell.lane` or
+  `sendell.channel=heartbeat`)
+- `sendell.queue.wait_ms` (histogram, attrs: `sendell.lane`)
+- `sendell.session.state` (counter, attrs: `sendell.state`, `sendell.reason`)
+- `sendell.session.stuck` (counter, attrs: `sendell.state`)
+- `sendell.session.stuck_age_ms` (histogram, attrs: `sendell.state`)
+- `sendell.run.attempt` (counter, attrs: `sendell.attempt`)
 
 ### Exported spans (names + key attributes)
 
-- `clawdbot.model.usage`
-  - `clawdbot.channel`, `clawdbot.provider`, `clawdbot.model`
-  - `clawdbot.sessionKey`, `clawdbot.sessionId`
-  - `clawdbot.tokens.*` (input/output/cache_read/cache_write/total)
-- `clawdbot.webhook.processed`
-  - `clawdbot.channel`, `clawdbot.webhook`, `clawdbot.chatId`
-- `clawdbot.webhook.error`
-  - `clawdbot.channel`, `clawdbot.webhook`, `clawdbot.chatId`,
-    `clawdbot.error`
-- `clawdbot.message.processed`
-  - `clawdbot.channel`, `clawdbot.outcome`, `clawdbot.chatId`,
-    `clawdbot.messageId`, `clawdbot.sessionKey`, `clawdbot.sessionId`,
-    `clawdbot.reason`
-- `clawdbot.session.stuck`
-  - `clawdbot.state`, `clawdbot.ageMs`, `clawdbot.queueDepth`,
-    `clawdbot.sessionKey`, `clawdbot.sessionId`
+- `sendell.model.usage`
+  - `sendell.channel`, `sendell.provider`, `sendell.model`
+  - `sendell.sessionKey`, `sendell.sessionId`
+  - `sendell.tokens.*` (input/output/cache_read/cache_write/total)
+- `sendell.webhook.processed`
+  - `sendell.channel`, `sendell.webhook`, `sendell.chatId`
+- `sendell.webhook.error`
+  - `sendell.channel`, `sendell.webhook`, `sendell.chatId`,
+    `sendell.error`
+- `sendell.message.processed`
+  - `sendell.channel`, `sendell.outcome`, `sendell.chatId`,
+    `sendell.messageId`, `sendell.sessionKey`, `sendell.sessionId`,
+    `sendell.reason`
+- `sendell.session.stuck`
+  - `sendell.state`, `sendell.ageMs`, `sendell.queueDepth`,
+    `sendell.sessionKey`, `sendell.sessionId`
 
 ### Sampling + flushing
 
@@ -337,7 +337,7 @@ Queues + sessions:
 
 ## Troubleshooting tips
 
-- **Gateway not reachable?** Run `clawdbot doctor` first.
+- **Gateway not reachable?** Run `sendell doctor` first.
 - **Logs empty?** Check that the Gateway is running and writing to the file path
   in `logging.file`.
 - **Need more detail?** Set `logging.level` to `debug` or `trace` and retry.

@@ -3,8 +3,8 @@
 Adds an **optional** agent tool `llm-task` for running **JSON-only** LLM tasks
 (drafting, summarizing, classifying) with optional JSON Schema validation.
 
-Designed to be called from workflow engines (for example, Lobster via
-`clawd.invoke --each`) without adding new Clawdbot code per workflow.
+Designed to be called from workflow engines (for example, Guide via
+`sendell.invoke --each`) without adding new Sendell code per workflow.
 
 ## Enable
 
@@ -85,13 +85,13 @@ Returns `details.json` containing the parsed JSON (and validates against
   (no code fences, no commentary).
 - No tools are exposed to the model for this run.
 - Side effects should be handled outside this tool (for example, approvals in
-  Lobster) before calling tools that send messages/emails.
+  Guide) before calling tools that send messages/emails.
 
 ## Bundled extension note
 
-This extension depends on Clawdbot internal modules (the embedded agent runner).
-It is intended to ship as a **bundled** Clawdbot extension (like `lobster`) and
+This extension depends on Sendell internal modules (the embedded agent runner).
+It is intended to ship as a **bundled** Sendell extension (like `guide`) and
 be enabled via `plugins.entries` + tool allowlists.
 
 It is **not** currently designed to be copied into
-`~/.clawdbot/extensions` as a standalone plugin directory.
+`~/.sendell/extensions` as a standalone plugin directory.

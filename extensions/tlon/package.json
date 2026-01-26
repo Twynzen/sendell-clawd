@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/tlon",
+  "name": "@sendell/tlon",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Tlon/Urbit channel plugin",
-  "clawdbot": {
+  "description": "Sendell Tlon/Urbit channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ],
@@ -18,7 +18,7 @@
       "quickstartAllowFrom": true
     },
     "install": {
-      "npmSpec": "@clawdbot/tlon",
+      "npmSpec": "@sendell/tlon",
       "localPath": "extensions/tlon",
       "defaultChoice": "npm"
     }

@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import type { RuntimeEnv } from "../runtime.js";
 import type { WizardPrompter } from "../wizard/prompts.js";
 import { buildWorkspaceHookStatus } from "../hooks/hooks-status.js";
@@ -6,16 +6,16 @@ import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent
 import { formatCliCommand } from "../cli/command-format.js";
 
 export async function setupInternalHooks(
-  cfg: ClawdbotConfig,
+  cfg: SendellConfig,
   runtime: RuntimeEnv,
   prompter: WizardPrompter,
-): Promise<ClawdbotConfig> {
+): Promise<SendellConfig> {
   await prompter.note(
     [
       "Hooks let you automate actions when agent commands are issued.",
       "Example: Save session context to memory when you issue /new.",
       "",
-      "Learn more: https://docs.clawd.bot/hooks",
+      "Learn more: https://docs.sendell.bot/hooks",
     ].join("\n"),
     "Hooks",
   );
@@ -58,7 +58,7 @@ export async function setupInternalHooks(
     entries[name] = { enabled: true };
   }
 
-  const next: ClawdbotConfig = {
+  const next: SendellConfig = {
     ...cfg,
     hooks: {
       ...cfg.hooks,
@@ -74,9 +74,9 @@ export async function setupInternalHooks(
       `Enabled ${selected.length} hook${selected.length > 1 ? "s" : ""}: ${selected.join(", ")}`,
       "",
       "You can manage hooks later with:",
-      `  ${formatCliCommand("clawdbot hooks list")}`,
-      `  ${formatCliCommand("clawdbot hooks enable <name>")}`,
-      `  ${formatCliCommand("clawdbot hooks disable <name>")}`,
+      `  ${formatCliCommand("sendell hooks list")}`,
+      `  ${formatCliCommand("sendell hooks enable <name>")}`,
+      `  ${formatCliCommand("sendell hooks disable <name>")}`,
     ].join("\n"),
     "Hooks Configured",
   );

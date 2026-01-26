@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "clawdbot/plugin-sdk";
+import type { SendellConfig } from "sendell/plugin-sdk";
 
 import type { ZaloFetch } from "./api.js";
 import { sendMessage, sendPhoto } from "./api.js";
@@ -9,7 +9,7 @@ import { resolveZaloToken } from "./token.js";
 export type ZaloSendOptions = {
   token?: string;
   accountId?: string;
-  cfg?: ClawdbotConfig;
+  cfg?: SendellConfig;
   mediaUrl?: string;
   caption?: string;
   verbose?: boolean;

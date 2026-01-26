@@ -1,10 +1,10 @@
-import type { ClawdbotConfig } from "../config/config.js";
-export function normalizeLegacyConfigValues(cfg: ClawdbotConfig): {
-  config: ClawdbotConfig;
+import type { SendellConfig } from "../config/config.js";
+export function normalizeLegacyConfigValues(cfg: SendellConfig): {
+  config: SendellConfig;
   changes: string[];
 } {
   const changes: string[] = [];
-  let next: ClawdbotConfig = cfg;
+  let next: SendellConfig = cfg;
 
   const legacyAckReaction = cfg.messages?.ackReaction?.trim();
   const hasWhatsAppConfig = cfg.channels?.whatsapp !== undefined;

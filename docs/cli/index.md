@@ -1,5 +1,5 @@
 ---
-summary: "Clawdbot CLI reference for `clawdbot` commands, subcommands, and options"
+summary: "Sendell CLI reference for `sendell` commands, subcommands, and options"
 read_when:
   - Adding or modifying CLI commands or options
   - Documenting new command surfaces
@@ -53,10 +53,10 @@ This page describes the current CLI behavior. If commands change, update this do
 
 ## Global flags
 
-- `--dev`: isolate state under `~/.clawdbot-dev` and shift default ports.
-- `--profile <name>`: isolate state under `~/.clawdbot-<name>`.
+- `--dev`: isolate state under `~/.sendell-dev` and shift default ports.
+- `--profile <name>`: isolate state under `~/.sendell-<name>`.
 - `--no-color`: disable ANSI colors.
-- `--update`: shorthand for `clawdbot update` (source installs only).
+- `--update`: shorthand for `sendell update` (source installs only).
 - `-V`, `--version`, `-v`: print version and exit.
 
 ## Output styling
@@ -69,7 +69,7 @@ This page describes the current CLI behavior. If commands change, update this do
 
 ## Color palette
 
-Clawdbot uses a lobster palette for CLI output.
+Sendell uses a guide palette for CLI output.
 
 - `accent` (#FF5A2D): headings, labels, primary highlights.
 - `accentBright` (#FF7A3D): command names, emphasis.
@@ -80,12 +80,12 @@ Clawdbot uses a lobster palette for CLI output.
 - `error` (#E23D2D): errors, failures.
 - `muted` (#8B7F77): de-emphasis, metadata.
 
-Palette source of truth: `src/terminal/palette.ts` (aka “lobster seam”).
+Palette source of truth: `src/terminal/palette.ts` (aka “guide seam”).
 
 ## Command tree
 
 ```
-clawdbot [--dev] [--profile <name>] <command>
+sendell [--dev] [--profile <name>] <command>
   setup
   onboard
   configure
@@ -236,23 +236,23 @@ clawdbot [--dev] [--profile <name>] <command>
   tui
 ```
 
-Note: plugins can add additional top-level commands (for example `clawdbot voicecall`).
+Note: plugins can add additional top-level commands (for example `sendell voicecall`).
 
 ## Security
 
-- `clawdbot security audit` — audit config + local state for common security foot-guns.
-- `clawdbot security audit --deep` — best-effort live Gateway probe.
-- `clawdbot security audit --fix` — tighten safe defaults and chmod state/config.
+- `sendell security audit` — audit config + local state for common security foot-guns.
+- `sendell security audit --deep` — best-effort live Gateway probe.
+- `sendell security audit --fix` — tighten safe defaults and chmod state/config.
 
 ## Plugins
 
 Manage extensions and their config:
 
-- `clawdbot plugins list` — discover plugins (use `--json` for machine output).
-- `clawdbot plugins info <id>` — show details for a plugin.
-- `clawdbot plugins install <path|.tgz|npm-spec>` — install a plugin (or add a plugin path to `plugins.load.paths`).
-- `clawdbot plugins enable <id>` / `disable <id>` — toggle `plugins.entries.<id>.enabled`.
-- `clawdbot plugins doctor` — report plugin load errors.
+- `sendell plugins list` — discover plugins (use `--json` for machine output).
+- `sendell plugins info <id>` — show details for a plugin.
+- `sendell plugins install <path|.tgz|npm-spec>` — install a plugin (or add a plugin path to `plugins.load.paths`).
+- `sendell plugins enable <id>` / `disable <id>` — toggle `plugins.entries.<id>.enabled`.
+- `sendell plugins doctor` — report plugin load errors.
 
 Most plugin changes require a gateway restart. See [/plugin](/plugin).
 
@@ -260,9 +260,9 @@ Most plugin changes require a gateway restart. See [/plugin](/plugin).
 
 Vector search over `MEMORY.md` + `memory/*.md`:
 
-- `clawdbot memory status` — show index stats.
-- `clawdbot memory index` — reindex memory files.
-- `clawdbot memory search "<query>"` — semantic search over memory.
+- `sendell memory status` — show index stats.
+- `sendell memory index` — reindex memory files.
+- `sendell memory search "<query>"` — semantic search over memory.
 
 ## Chat slash commands
 
@@ -279,7 +279,7 @@ Highlights:
 Initialize config + workspace.
 
 Options:
-- `--workspace <dir>`: agent workspace path (default `~/clawd`).
+- `--workspace <dir>`: agent workspace path (default `~/sendell`).
 - `--wizard`: run the onboarding wizard.
 - `--non-interactive`: run wizard without prompts.
 - `--mode <local|remote>`: wizard mode.
@@ -335,7 +335,7 @@ Options:
 Interactive configuration wizard (models, channels, skills, gateway).
 
 ### `config`
-Non-interactive config helpers (get/set/unset). Running `clawdbot config` with no
+Non-interactive config helpers (get/set/unset). Running `sendell config` with no
 subcommand launches the wizard.
 
 Subcommands:
@@ -359,8 +359,8 @@ Manage chat channel accounts (WhatsApp/Telegram/Discord/Google Chat/Slack/Matter
 
 Subcommands:
 - `channels list`: show configured channels and auth profiles (Claude Code + Codex CLI OAuth sync included).
-- `channels status`: check gateway reachability and channel health (`--probe` runs extra checks; use `clawdbot health` or `clawdbot status --deep` for gateway health probes).
-- Tip: `channels status` prints warnings with suggested fixes when it can detect common misconfigurations (then points you to `clawdbot doctor`).
+- `channels status`: check gateway reachability and channel health (`--probe` runs extra checks; use `sendell health` or `sendell status --deep` for gateway health probes).
+- Tip: `channels status` prints warnings with suggested fixes when it can detect common misconfigurations (then points you to `sendell doctor`).
 - `channels logs`: show recent channel logs from the gateway log file.
 - `channels add`: wizard-style setup when no flags are passed; flags switch to non-interactive mode.
 - `channels remove`: disable by default; pass `--delete` to remove config entries without prompts.
@@ -400,11 +400,11 @@ More detail: [/concepts/oauth](/concepts/oauth)
 
 Examples:
 ```bash
-clawdbot channels add --channel telegram --account alerts --name "Alerts Bot" --token $TELEGRAM_BOT_TOKEN
-clawdbot channels add --channel discord --account work --name "Work Bot" --token $DISCORD_BOT_TOKEN
-clawdbot channels remove --channel discord --account work --delete
-clawdbot channels status --probe
-clawdbot status --deep
+sendell channels add --channel telegram --account alerts --name "Alerts Bot" --token $TELEGRAM_BOT_TOKEN
+sendell channels add --channel discord --account work --name "Work Bot" --token $DISCORD_BOT_TOKEN
+sendell channels remove --channel discord --account work --delete
+sendell channels status --probe
+sendell status --deep
 ```
 
 ### `skills`
@@ -461,8 +461,8 @@ Subcommands:
 - `message event <list|create>`
 
 Examples:
-- `clawdbot message send --target +15555550123 --message "Hi"`
-- `clawdbot message poll --channel discord --target channel:123 --poll-question "Snack?" --poll-option Pizza --poll-option Sushi`
+- `sendell message send --target +15555550123 --message "Hi"`
+- `sendell message poll --channel discord --target channel:123 --poll-question "Snack?" --poll-option Pizza --poll-option Sushi`
 
 ### `agent`
 Run one agent turn via the Gateway (or `--local` embedded).
@@ -532,11 +532,11 @@ Notes:
 - Overview includes Gateway + node host service status when available.
 
 ### Usage tracking
-Clawdbot can surface provider usage/quota when OAuth/API creds are available.
+Sendell can surface provider usage/quota when OAuth/API creds are available.
 
 Surfaces:
 - `/status` (adds a short provider usage line when available)
-- `clawdbot status --usage` (prints full provider breakdown)
+- `sendell status --usage` (prints full provider breakdown)
 - macOS menu bar (Usage section under Context)
 
 Notes:
@@ -630,7 +630,7 @@ Subcommands:
 Notes:
 - `gateway status` probes the Gateway RPC by default using the service’s resolved port/config (override with `--url/--token/--password`).
 - `gateway status` supports `--no-probe`, `--deep`, and `--json` for scripting.
-- `gateway status` also surfaces legacy or extra gateway services when it can detect them (`--deep` adds system-level scans). Profile-named Clawdbot services are treated as first-class and aren't flagged as "extra".
+- `gateway status` also surfaces legacy or extra gateway services when it can detect them (`--deep` adds system-level scans). Profile-named Sendell services are treated as first-class and aren't flagged as "extra".
 - `gateway status` prints which config path the CLI uses vs which config the service likely uses (service env), plus the resolved probe target URL.
 - `gateway install|uninstall|start|stop|restart` support `--json` for scripting (default output stays human-friendly).
 - `gateway install` defaults to Node runtime; bun is **not recommended** (WhatsApp/Telegram bugs).
@@ -645,11 +645,11 @@ Notes:
 
 Examples:
 ```bash
-clawdbot logs --follow
-clawdbot logs --limit 200
-clawdbot logs --plain
-clawdbot logs --json
-clawdbot logs --no-color
+sendell logs --follow
+sendell logs --limit 200
+sendell logs --plain
+sendell logs --json
+sendell logs --no-color
 ```
 
 ### `gateway <subcommand>`
@@ -680,11 +680,11 @@ Preferred Anthropic auth (CLI token, not API key):
 
 ```bash
 claude setup-token
-clawdbot models status
+sendell models status
 ```
 
 ### `models` (root)
-`clawdbot models` is an alias for `models status`.
+`sendell models` is an alias for `models status`.
 
 Root options:
 - `--status-json` (alias for `models status --json`)
@@ -812,7 +812,7 @@ All `cron` commands accept `--url`, `--token`, `--timeout`, `--expect-final`.
 ## Node host
 
 `node` runs a **headless node host** or manages it as a background service. See
-[`clawdbot node`](/cli/node).
+[`sendell node`](/cli/node).
 
 Subcommands:
 - `node run --host <gateway-host> --port 18789`
@@ -861,7 +861,7 @@ Location:
 
 ## Browser
 
-Browser control CLI (dedicated Chrome/Brave/Edge/Chromium). See [`clawdbot browser`](/cli/browser) and the [Browser tool](/tools/browser).
+Browser control CLI (dedicated Chrome/Brave/Edge/Chromium). See [`sendell browser`](/cli/browser) and the [Browser tool](/tools/browser).
 
 Common options:
 - `--url <controlUrl>`

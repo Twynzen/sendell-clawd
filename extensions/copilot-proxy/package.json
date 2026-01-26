@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/copilot-proxy",
+  "name": "@sendell/copilot-proxy",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Copilot Proxy provider plugin",
-  "clawdbot": {
+  "description": "Sendell Copilot Proxy provider plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

@@ -241,7 +241,7 @@ Required for auth; never changes.
 Preferred:
 - Keypair fingerprint (public key hash).
 
-## Cute slug (lobster‑themed)
+## Cute slug (guide‑themed)
 Human label only.
 - Example: `scarlet-claw`, `saltwave`, `mantis-pinch`.
 - Stored in gateway registry, editable.

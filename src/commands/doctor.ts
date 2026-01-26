@@ -10,13 +10,13 @@ import {
   resolveHooksGmailModel,
 } from "../agents/model-selection.js";
 import { formatCliCommand } from "../cli/command-format.js";
-import type { ClawdbotConfig } from "../config/config.js";
-import { CONFIG_PATH_CLAWDBOT, readConfigFileSnapshot, writeConfigFile } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
+import { CONFIG_PATH_SENDELL, readConfigFileSnapshot, writeConfigFile } from "../config/config.js";
 import { logConfigUpdated } from "../config/logging.js";
 import { resolveGatewayService } from "../daemon/service.js";
 import { resolveGatewayAuth } from "../gateway/auth.js";
 import { buildGatewayConnectionDetails } from "../gateway/call.js";
-import { resolveClawdbotPackageRoot } from "../infra/clawdbot-root.js";
+import { resolveSendellPackageRoot } from "../infra/sendell-root.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { defaultRuntime } from "../runtime.js";
 import { note } from "../terminal/note.js";
@@ -54,7 +54,7 @@ import { ensureSystemdUserLingerInteractive } from "./systemd-linger.js";
 const intro = (message: string) => clackIntro(stylePromptTitle(message) ?? message);
 const outro = (message: string) => clackOutro(stylePromptTitle(message) ?? message);
 
-function resolveMode(cfg: ClawdbotConfig): "local" | "remote" {
+function resolveMode(cfg: SendellConfig): "local" | "remote" {
   return cfg.gateway?.mode === "remote" ? "remote" : "local";
 }
 
@@ -64,9 +64,9 @@ export async function doctorCommand(
 ) {
   const prompter = createDoctorPrompter({ runtime, options });
   printWizardHeader(runtime);
-  intro("Clawdbot doctor");
+  intro("Sendell doctor");
 
-  const root = await resolveClawdbotPackageRoot({
+  const root = await resolveSendellPackageRoot({
     moduleUrl: import.meta.url,
     argv1: process.argv[1],
     cwd: process.cwd(),
@@ -88,17 +88,17 @@ export async function doctorCommand(
     options,
     confirm: (p) => prompter.confirm(p),
   });
-  let cfg: ClawdbotConfig = configResult.cfg;
+  let cfg: SendellConfig = configResult.cfg;
 
-  const configPath = configResult.path ?? CONFIG_PATH_CLAWDBOT;
+  const configPath = configResult.path ?? CONFIG_PATH_SENDELL;
   if (!cfg.gateway?.mode) {
     const lines = [
       "gateway.mode is unset; gateway start will be blocked.",
-      `Fix: run ${formatCliCommand("clawdbot configure")} and set Gateway mode (local/remote).`,
-      `Or set directly: ${formatCliCommand("clawdbot config set gateway.mode local")}`,
+      `Fix: run ${formatCliCommand("sendell configure")} and set Gateway mode (local/remote).`,
+      `Or set directly: ${formatCliCommand("sendell config set gateway.mode local")}`,
     ];
     if (!fs.existsSync(configPath)) {
-      lines.push(`Missing config: run ${formatCliCommand("clawdbot setup")} first.`);
+      lines.push(`Missing config: run ${formatCliCommand("sendell setup")} first.`);
     }
     note(lines.join("\n"), "Gateway");
   }
@@ -174,7 +174,7 @@ export async function doctorCommand(
     }
   }
 
-  await noteStateIntegrity(cfg, prompter, configResult.path ?? CONFIG_PATH_CLAWDBOT);
+  await noteStateIntegrity(cfg, prompter, configResult.path ?? CONFIG_PATH_SENDELL);
 
   cfg = await maybeRepairSandboxImages(cfg, runtime, prompter);
   noteSandboxScopeWarnings(cfg);
@@ -272,12 +272,12 @@ export async function doctorCommand(
     cfg = applyWizardMetadata(cfg, { command: "doctor", mode: resolveMode(cfg) });
     await writeConfigFile(cfg);
     logConfigUpdated(runtime);
-    const backupPath = `${CONFIG_PATH_CLAWDBOT}.bak`;
+    const backupPath = `${CONFIG_PATH_SENDELL}.bak`;
     if (fs.existsSync(backupPath)) {
       runtime.log(`Backup: ${shortenHomePath(backupPath)}`);
     }
   } else {
-    runtime.log(`Run "${formatCliCommand("clawdbot doctor --fix")}" to apply changes.`);
+    runtime.log(`Run "${formatCliCommand("sendell doctor --fix")}" to apply changes.`);
   }
 
   if (options.workspaceSuggestions !== false) {

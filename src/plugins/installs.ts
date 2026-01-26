@@ -1,12 +1,12 @@
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import type { PluginInstallRecord } from "../config/types.plugins.js";
 
 export type PluginInstallUpdate = PluginInstallRecord & { pluginId: string };
 
 export function recordPluginInstall(
-  cfg: ClawdbotConfig,
+  cfg: SendellConfig,
   update: PluginInstallUpdate,
-): ClawdbotConfig {
+): SendellConfig {
   const { pluginId, ...record } = update;
   const installs = {
     ...cfg.plugins?.installs,

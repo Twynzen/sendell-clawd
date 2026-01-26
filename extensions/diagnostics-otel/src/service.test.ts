@@ -95,8 +95,8 @@ vi.mock("@opentelemetry/semantic-conventions", () => ({
   },
 }));
 
-vi.mock("clawdbot/plugin-sdk", async () => {
-  const actual = await vi.importActual<typeof import("clawdbot/plugin-sdk")>("clawdbot/plugin-sdk");
+vi.mock("sendell/plugin-sdk", async () => {
+  const actual = await vi.importActual<typeof import("sendell/plugin-sdk")>("sendell/plugin-sdk");
   return {
     ...actual,
     registerLogTransport: registerLogTransportMock,
@@ -104,7 +104,7 @@ vi.mock("clawdbot/plugin-sdk", async () => {
 });
 
 import { createDiagnosticsOtelService } from "./service.js";
-import { emitDiagnosticEvent } from "clawdbot/plugin-sdk";
+import { emitDiagnosticEvent } from "sendell/plugin-sdk";
 
 describe("diagnostics-otel service", () => {
   beforeEach(() => {
@@ -191,20 +191,20 @@ describe("diagnostics-otel service", () => {
       attempt: 2,
     });
 
-    expect(telemetryState.counters.get("clawdbot.webhook.received")?.add).toHaveBeenCalled();
-    expect(telemetryState.histograms.get("clawdbot.webhook.duration_ms")?.record).toHaveBeenCalled();
-    expect(telemetryState.counters.get("clawdbot.message.queued")?.add).toHaveBeenCalled();
-    expect(telemetryState.counters.get("clawdbot.message.processed")?.add).toHaveBeenCalled();
-    expect(telemetryState.histograms.get("clawdbot.message.duration_ms")?.record).toHaveBeenCalled();
-    expect(telemetryState.histograms.get("clawdbot.queue.wait_ms")?.record).toHaveBeenCalled();
-    expect(telemetryState.counters.get("clawdbot.session.stuck")?.add).toHaveBeenCalled();
-    expect(telemetryState.histograms.get("clawdbot.session.stuck_age_ms")?.record).toHaveBeenCalled();
-    expect(telemetryState.counters.get("clawdbot.run.attempt")?.add).toHaveBeenCalled();
+    expect(telemetryState.counters.get("sendell.webhook.received")?.add).toHaveBeenCalled();
+    expect(telemetryState.histograms.get("sendell.webhook.duration_ms")?.record).toHaveBeenCalled();
+    expect(telemetryState.counters.get("sendell.message.queued")?.add).toHaveBeenCalled();
+    expect(telemetryState.counters.get("sendell.message.processed")?.add).toHaveBeenCalled();
+    expect(telemetryState.histograms.get("sendell.message.duration_ms")?.record).toHaveBeenCalled();
+    expect(telemetryState.histograms.get("sendell.queue.wait_ms")?.record).toHaveBeenCalled();
+    expect(telemetryState.counters.get("sendell.session.stuck")?.add).toHaveBeenCalled();
+    expect(telemetryState.histograms.get("sendell.session.stuck_age_ms")?.record).toHaveBeenCalled();
+    expect(telemetryState.counters.get("sendell.run.attempt")?.add).toHaveBeenCalled();
 
     const spanNames = telemetryState.tracer.startSpan.mock.calls.map((call) => call[0]);
-    expect(spanNames).toContain("clawdbot.webhook.processed");
-    expect(spanNames).toContain("clawdbot.message.processed");
-    expect(spanNames).toContain("clawdbot.session.stuck");
+    expect(spanNames).toContain("sendell.webhook.processed");
+    expect(spanNames).toContain("sendell.message.processed");
+    expect(spanNames).toContain("sendell.session.stuck");
 
     expect(registerLogTransportMock).toHaveBeenCalledTimes(1);
     expect(registeredTransports).toHaveLength(1);

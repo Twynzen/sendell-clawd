@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/whatsapp",
+  "name": "@sendell/whatsapp",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot WhatsApp channel plugin",
-  "clawdbot": {
+  "description": "Sendell WhatsApp channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

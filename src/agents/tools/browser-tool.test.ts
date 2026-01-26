@@ -38,9 +38,9 @@ const browserConfigMocks = vi.hoisted(() => ({
     headless: true,
     noSandbox: false,
     attachOnly: false,
-    defaultProfile: "clawd",
+    defaultProfile: "sendell",
     profiles: {
-      clawd: {
+      sendell: {
         cdpPort: 18792,
         color: "#FF0000",
       },

@@ -2,9 +2,9 @@ import { Type } from "@sinclair/typebox";
 import { spawn } from "node:child_process";
 import path from "node:path";
 
-import type { ClawdbotPluginApi } from "../../../src/plugins/types.js";
+import type { SendellPluginApi } from "../../../src/plugins/types.js";
 
-type LobsterEnvelope =
+type GuideEnvelope =
   | {
       ok: true;
       status: "ok" | "needs_approval" | "cancelled";
@@ -21,12 +21,12 @@ type LobsterEnvelope =
       error: { type?: string; message: string };
     };
 
-function resolveExecutablePath(lobsterPathRaw: string | undefined) {
-  const lobsterPath = lobsterPathRaw?.trim() || "lobster";
-  if (lobsterPath !== "lobster" && !path.isAbsolute(lobsterPath)) {
-    throw new Error("lobsterPath must be an absolute path (or omit to use PATH)");
+function resolveExecutablePath(guidePathRaw: string | undefined) {
+  const guidePath = guidePathRaw?.trim() || "guide";
+  if (guidePath !== "guide" && !path.isAbsolute(guidePath)) {
+    throw new Error("guidePath must be an absolute path (or omit to use PATH)");
   }
-  return lobsterPath;
+  return guidePath;
 }
 
 function isWindowsSpawnEINVAL(err: unknown) {
@@ -35,7 +35,7 @@ function isWindowsSpawnEINVAL(err: unknown) {
   return code === "EINVAL";
 }
 
-async function runLobsterSubprocessOnce(
+async function runGuideSubprocessOnce(
   params: {
     execPath: string;
     argv: string[];
@@ -78,7 +78,7 @@ async function runLobsterSubprocessOnce(
         try {
           child.kill("SIGKILL");
         } finally {
-          reject(new Error("lobster output exceeded maxStdoutBytes"));
+          reject(new Error("guide output exceeded maxStdoutBytes"));
         }
         return;
       }
@@ -93,7 +93,7 @@ async function runLobsterSubprocessOnce(
       try {
         child.kill("SIGKILL");
       } finally {
-        reject(new Error("lobster subprocess timed out"));
+        reject(new Error("guide subprocess timed out"));
       }
     }, timeoutMs);
 
@@ -105,7 +105,7 @@ async function runLobsterSubprocessOnce(
     child.once("exit", (code) => {
       clearTimeout(timer);
       if (code !== 0) {
-        reject(new Error(`lobster failed (${code ?? "?"}): ${stderr.trim() || stdout.trim()}`));
+        reject(new Error(`guide failed (${code ?? "?"}): ${stderr.trim() || stdout.trim()}`));
         return;
       }
       resolve({ stdout });
@@ -113,7 +113,7 @@ async function runLobsterSubprocessOnce(
   });
 }
 
-async function runLobsterSubprocess(params: {
+async function runGuideSubprocess(params: {
   execPath: string;
   argv: string[];
   cwd: string;
@@ -121,40 +121,40 @@ async function runLobsterSubprocess(params: {
   maxStdoutBytes: number;
 }) {
   try {
-    return await runLobsterSubprocessOnce(params, false);
+    return await runGuideSubprocessOnce(params, false);
   } catch (err) {
     if (process.platform === "win32" && isWindowsSpawnEINVAL(err)) {
-      return await runLobsterSubprocessOnce(params, true);
+      return await runGuideSubprocessOnce(params, true);
     }
     throw err;
   }
 }
 
-function parseEnvelope(stdout: string): LobsterEnvelope {
+function parseEnvelope(stdout: string): GuideEnvelope {
   let parsed: unknown;
   try {
     parsed = JSON.parse(stdout);
   } catch {
-    throw new Error("lobster returned invalid JSON");
+    throw new Error("guide returned invalid JSON");
   }
 
   if (!parsed || typeof parsed !== "object") {
-    throw new Error("lobster returned invalid JSON envelope");
+    throw new Error("guide returned invalid JSON envelope");
   }
 
   const ok = (parsed as { ok?: unknown }).ok;
   if (ok === true || ok === false) {
-    return parsed as LobsterEnvelope;
+    return parsed as GuideEnvelope;
   }
 
-  throw new Error("lobster returned invalid JSON envelope");
+  throw new Error("guide returned invalid JSON envelope");
 }
 
-export function createLobsterTool(api: ClawdbotPluginApi) {
+export function createGuideTool(api: SendellPluginApi) {
   return {
-    name: "lobster",
+    name: "guide",
     description:
-      "Run Lobster pipelines as a local-first workflow runtime (typed JSON envelope + resumable approvals).",
+      "Run Guide pipelines as a local-first workflow runtime (typed JSON envelope + resumable approvals).",
     parameters: Type.Object({
       // NOTE: Prefer string enums in tool schemas; some providers reject unions/anyOf.
       action: Type.Unsafe<"run" | "resume">({ type: "string", enum: ["run", "resume"] }),
@@ -162,7 +162,7 @@ export function createLobsterTool(api: ClawdbotPluginApi) {
       argsJson: Type.Optional(Type.String()),
       token: Type.Optional(Type.String()),
       approve: Type.Optional(Type.Boolean()),
-      lobsterPath: Type.Optional(Type.String()),
+      guidePath: Type.Optional(Type.String()),
       cwd: Type.Optional(Type.String()),
       timeoutMs: Type.Optional(Type.Number()),
       maxStdoutBytes: Type.Optional(Type.Number()),
@@ -172,7 +172,7 @@ export function createLobsterTool(api: ClawdbotPluginApi) {
       if (!action) throw new Error("action required");
 
       const execPath = resolveExecutablePath(
-        typeof params.lobsterPath === "string" ? params.lobsterPath : undefined,
+        typeof params.guidePath === "string" ? params.guidePath : undefined,
       );
       const cwd = typeof params.cwd === "string" && params.cwd.trim() ? params.cwd.trim() : process.cwd();
       const timeoutMs = typeof params.timeoutMs === "number" ? params.timeoutMs : 20_000;
@@ -200,10 +200,10 @@ export function createLobsterTool(api: ClawdbotPluginApi) {
       })();
 
       if (api.runtime?.version && api.logger?.debug) {
-        api.logger.debug(`lobster plugin runtime=${api.runtime.version}`);
+        api.logger.debug(`guide plugin runtime=${api.runtime.version}`);
       }
 
-      const { stdout } = await runLobsterSubprocess({
+      const { stdout } = await runGuideSubprocess({
         execPath,
         argv,
         cwd,

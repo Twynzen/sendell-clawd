@@ -6,14 +6,14 @@ read_when:
 ---
 # Hooks
 
-Hooks provide an extensible event-driven system for automating actions in response to agent commands and events. Hooks are automatically discovered from directories and can be managed via CLI commands, similar to how skills work in Clawdbot.
+Hooks provide an extensible event-driven system for automating actions in response to agent commands and events. Hooks are automatically discovered from directories and can be managed via CLI commands, similar to how skills work in Sendell.
 
 ## Getting Oriented
 
 Hooks are small scripts that run when something happens. There are two kinds:
 
 - **Hooks** (this page): run inside the Gateway when agent events fire, like `/new`, `/reset`, `/stop`, or lifecycle events.
-- **Webhooks**: external HTTP webhooks that let other systems trigger work in Clawdbot. See [Webhook Hooks](/automation/webhook) or use `clawdbot webhooks` for Gmail helper commands.
+- **Webhooks**: external HTTP webhooks that let other systems trigger work in Sendell. See [Webhook Hooks](/automation/webhook) or use `sendell webhooks` for Gmail helper commands.
   
 Hooks can also be bundled inside plugins; see [Plugins](/plugin#plugin-hooks).
 
@@ -31,54 +31,54 @@ The hooks system allows you to:
 - Save session context to memory when `/new` is issued
 - Log all commands for auditing
 - Trigger custom automations on agent lifecycle events
-- Extend Clawdbot's behavior without modifying core code
+- Extend Sendell's behavior without modifying core code
 
 ## Getting Started
 
 ### Bundled Hooks
 
-Clawdbot ships with four bundled hooks that are automatically discovered:
+Sendell ships with four bundled hooks that are automatically discovered:
 
-- **💾 session-memory**: Saves session context to your agent workspace (default `~/clawd/memory/`) when you issue `/new`
-- **📝 command-logger**: Logs all command events to `~/.clawdbot/logs/commands.log`
+- **💾 session-memory**: Saves session context to your agent workspace (default `~/sendell/memory/`) when you issue `/new`
+- **📝 command-logger**: Logs all command events to `~/.sendell/logs/commands.log`
 - **🚀 boot-md**: Runs `BOOT.md` when the gateway starts (requires internal hooks enabled)
 - **😈 soul-evil**: Swaps injected `SOUL.md` content with `SOUL_EVIL.md` during a purge window or by random chance
 
 List available hooks:
 
 ```bash
-clawdbot hooks list
+sendell hooks list
 ```
 
 Enable a hook:
 
 ```bash
-clawdbot hooks enable session-memory
+sendell hooks enable session-memory
 ```
 
 Check hook status:
 
 ```bash
-clawdbot hooks check
+sendell hooks check
 ```
 
 Get detailed information:
 
 ```bash
-clawdbot hooks info session-memory
+sendell hooks info session-memory
 ```
 
 ### Onboarding
 
-During onboarding (`clawdbot onboard`), you'll be prompted to enable recommended hooks. The wizard automatically discovers eligible hooks and presents them for selection.
+During onboarding (`sendell onboard`), you'll be prompted to enable recommended hooks. The wizard automatically discovers eligible hooks and presents them for selection.
 
 ## Hook Discovery
 
 Hooks are automatically discovered from three directories (in order of precedence):
 
 1. **Workspace hooks**: `<workspace>/hooks/` (per-agent, highest precedence)
-2. **Managed hooks**: `~/.clawdbot/hooks/` (user-installed, shared across workspaces)
-3. **Bundled hooks**: `<clawdbot>/dist/hooks/bundled/` (shipped with Clawdbot)
+2. **Managed hooks**: `~/.sendell/hooks/` (user-installed, shared across workspaces)
+3. **Bundled hooks**: `<sendell>/dist/hooks/bundled/` (shipped with Sendell)
 
 Managed hook directories can be either a **single hook** or a **hook pack** (package directory).
 
@@ -92,11 +92,11 @@ my-hook/
 
 ## Hook Packs (npm/archives)
 
-Hook packs are standard npm packages that export one or more hooks via `clawdbot.hooks` in
+Hook packs are standard npm packages that export one or more hooks via `sendell.hooks` in
 `package.json`. Install them with:
 
 ```bash
-clawdbot hooks install <path-or-spec>
+sendell hooks install <path-or-spec>
 ```
 
 Example `package.json`:
@@ -105,14 +105,14 @@ Example `package.json`:
 {
   "name": "@acme/my-hooks",
   "version": "0.1.0",
-  "clawdbot": {
+  "sendell": {
     "hooks": ["./hooks/my-hook", "./hooks/other-hook"]
   }
 }
 ```
 
 Each entry points to a hook directory containing `HOOK.md` and `handler.ts` (or `index.ts`).
-Hook packs can ship dependencies; they will be installed under `~/.clawdbot/hooks/<id>`.
+Hook packs can ship dependencies; they will be installed under `~/.sendell/hooks/<id>`.
 
 ## Hook Structure
 
@@ -124,8 +124,8 @@ The `HOOK.md` file contains metadata in YAML frontmatter plus Markdown documenta
 ---
 name: my-hook
 description: "Short description of what this hook does"
-homepage: https://docs.clawd.bot/hooks#my-hook
-metadata: {"clawdbot":{"emoji":"🔗","events":["command:new"],"requires":{"bins":["node"]}}}
+homepage: https://docs.sendell.bot/hooks#my-hook
+metadata: {"sendell":{"emoji":"🔗","events":["command:new"],"requires":{"bins":["node"]}}}
 ---
 
 # My Hook
@@ -149,7 +149,7 @@ No configuration needed.
 
 ### Metadata Fields
 
-The `metadata.clawdbot` object supports:
+The `metadata.sendell` object supports:
 
 - **`emoji`**: Display emoji for CLI (e.g., `"💾"`)
 - **`events`**: Array of events to listen for (e.g., `["command:new", "command:reset"]`)
@@ -209,7 +209,7 @@ Each event includes:
     senderId?: string,
     workspaceDir?: string,
     bootstrapFiles?: WorkspaceBootstrapFile[],
-    cfg?: ClawdbotConfig
+    cfg?: SendellConfig
   }
 }
 ```
@@ -237,7 +237,7 @@ Triggered when the gateway starts:
 
 ### Tool Result Hooks (Plugin API)
 
-These hooks are not event-stream listeners; they let plugins synchronously adjust tool results before Clawdbot persists them.
+These hooks are not event-stream listeners; they let plugins synchronously adjust tool results before Sendell persists them.
 
 - **`tool_result_persist`**: transform tool results before they are written to the session transcript. Must be synchronous; return the updated tool result payload or `undefined` to keep it as-is. See [Agent Loop](/concepts/agent-loop).
 
@@ -256,13 +256,13 @@ Planned event types:
 ### 1. Choose Location
 
 - **Workspace hooks** (`<workspace>/hooks/`): Per-agent, highest precedence
-- **Managed hooks** (`~/.clawdbot/hooks/`): Shared across workspaces
+- **Managed hooks** (`~/.sendell/hooks/`): Shared across workspaces
 
 ### 2. Create Directory Structure
 
 ```bash
-mkdir -p ~/.clawdbot/hooks/my-hook
-cd ~/.clawdbot/hooks/my-hook
+mkdir -p ~/.sendell/hooks/my-hook
+cd ~/.sendell/hooks/my-hook
 ```
 
 ### 3. Create HOOK.md
@@ -271,7 +271,7 @@ cd ~/.clawdbot/hooks/my-hook
 ---
 name: my-hook
 description: "Does something useful"
-metadata: {"clawdbot":{"emoji":"🎯","events":["command:new"]}}
+metadata: {"sendell":{"emoji":"🎯","events":["command:new"]}}
 ---
 
 # My Custom Hook
@@ -300,10 +300,10 @@ export default handler;
 
 ```bash
 # Verify hook is discovered
-clawdbot hooks list
+sendell hooks list
 
 # Enable it
-clawdbot hooks enable my-hook
+sendell hooks enable my-hook
 
 # Restart your gateway process (menu bar app restart on macOS, or restart your dev process)
 
@@ -397,46 +397,46 @@ The old config format still works for backwards compatibility:
 
 ```bash
 # List all hooks
-clawdbot hooks list
+sendell hooks list
 
 # Show only eligible hooks
-clawdbot hooks list --eligible
+sendell hooks list --eligible
 
 # Verbose output (show missing requirements)
-clawdbot hooks list --verbose
+sendell hooks list --verbose
 
 # JSON output
-clawdbot hooks list --json
+sendell hooks list --json
 ```
 
 ### Hook Information
 
 ```bash
 # Show detailed info about a hook
-clawdbot hooks info session-memory
+sendell hooks info session-memory
 
 # JSON output
-clawdbot hooks info session-memory --json
+sendell hooks info session-memory --json
 ```
 
 ### Check Eligibility
 
 ```bash
 # Show eligibility summary
-clawdbot hooks check
+sendell hooks check
 
 # JSON output
-clawdbot hooks check --json
+sendell hooks check --json
 ```
 
 ### Enable/Disable
 
 ```bash
 # Enable a hook
-clawdbot hooks enable session-memory
+sendell hooks enable session-memory
 
 # Disable a hook
-clawdbot hooks disable command-logger
+sendell hooks disable command-logger
 ```
 
 ## Bundled Hooks
@@ -449,7 +449,7 @@ Saves session context to memory when you issue `/new`.
 
 **Requirements**: `workspace.dir` must be configured
 
-**Output**: `<workspace>/memory/YYYY-MM-DD-slug.md` (defaults to `~/clawd`)
+**Output**: `<workspace>/memory/YYYY-MM-DD-slug.md` (defaults to `~/sendell`)
 
 **What it does**:
 1. Uses the pre-reset session entry to locate the correct transcript
@@ -475,7 +475,7 @@ Saves session context to memory when you issue `/new`.
 **Enable**:
 
 ```bash
-clawdbot hooks enable session-memory
+sendell hooks enable session-memory
 ```
 
 ### command-logger
@@ -486,7 +486,7 @@ Logs all command events to a centralized audit file.
 
 **Requirements**: None
 
-**Output**: `~/.clawdbot/logs/commands.log`
+**Output**: `~/.sendell/logs/commands.log`
 
 **What it does**:
 1. Captures event details (command action, timestamp, session key, sender ID, source)
@@ -504,19 +504,19 @@ Logs all command events to a centralized audit file.
 
 ```bash
 # View recent commands
-tail -n 20 ~/.clawdbot/logs/commands.log
+tail -n 20 ~/.sendell/logs/commands.log
 
 # Pretty-print with jq
-cat ~/.clawdbot/logs/commands.log | jq .
+cat ~/.sendell/logs/commands.log | jq .
 
 # Filter by action
-grep '"action":"new"' ~/.clawdbot/logs/commands.log | jq .
+grep '"action":"new"' ~/.sendell/logs/commands.log | jq .
 ```
 
 **Enable**:
 
 ```bash
-clawdbot hooks enable command-logger
+sendell hooks enable command-logger
 ```
 
 ### soul-evil
@@ -532,7 +532,7 @@ Swaps injected `SOUL.md` content with `SOUL_EVIL.md` during a purge window or by
 **Enable**:
 
 ```bash
-clawdbot hooks enable soul-evil
+sendell hooks enable soul-evil
 ```
 
 **Config**:
@@ -572,7 +572,7 @@ Internal hooks must be enabled for this to run.
 **Enable**:
 
 ```bash
-clawdbot hooks enable boot-md
+sendell hooks enable boot-md
 ```
 
 ## Best Practices
@@ -629,13 +629,13 @@ const handler: HookHandler = async (event) => {
 Specify exact events in metadata when possible:
 
 ```yaml
-metadata: {"clawdbot":{"events":["command:new"]}}  # Specific
+metadata: {"sendell":{"events":["command:new"]}}  # Specific
 ```
 
 Rather than:
 
 ```yaml
-metadata: {"clawdbot":{"events":["command"]}}      # General - more overhead
+metadata: {"sendell":{"events":["command"]}}      # General - more overhead
 ```
 
 ## Debugging
@@ -655,7 +655,7 @@ Registered hook: boot-md -> gateway:startup
 List all discovered hooks:
 
 ```bash
-clawdbot hooks list --verbose
+sendell hooks list --verbose
 ```
 
 ### Check Registration
@@ -674,7 +674,7 @@ const handler: HookHandler = async (event) => {
 Check why a hook isn't eligible:
 
 ```bash
-clawdbot hooks info my-hook
+sendell hooks info my-hook
 ```
 
 Look for missing requirements in the output.
@@ -690,7 +690,7 @@ Monitor gateway logs to see hook execution:
 ./scripts/clawlog.sh -f
 
 # Other platforms
-tail -f ~/.clawdbot/gateway.log
+tail -f ~/.sendell/gateway.log
 ```
 
 ### Test Hooks Directly
@@ -765,19 +765,19 @@ Session reset
 
 1. Check directory structure:
    ```bash
-   ls -la ~/.clawdbot/hooks/my-hook/
+   ls -la ~/.sendell/hooks/my-hook/
    # Should show: HOOK.md, handler.ts
    ```
 
 2. Verify HOOK.md format:
    ```bash
-   cat ~/.clawdbot/hooks/my-hook/HOOK.md
+   cat ~/.sendell/hooks/my-hook/HOOK.md
    # Should have YAML frontmatter with name and metadata
    ```
 
 3. List all discovered hooks:
    ```bash
-   clawdbot hooks list
+   sendell hooks list
    ```
 
 ### Hook Not Eligible
@@ -785,7 +785,7 @@ Session reset
 Check requirements:
 
 ```bash
-clawdbot hooks info my-hook
+sendell hooks info my-hook
 ```
 
 Look for missing:
@@ -798,7 +798,7 @@ Look for missing:
 
 1. Verify hook is enabled:
    ```bash
-   clawdbot hooks list
+   sendell hooks list
    # Should show ✓ next to enabled hooks
    ```
 
@@ -844,8 +844,8 @@ node -e "import('./path/to/handler.ts').then(console.log)"
 
 1. Create hook directory:
    ```bash
-   mkdir -p ~/.clawdbot/hooks/my-hook
-   mv ./hooks/handlers/my-handler.ts ~/.clawdbot/hooks/my-hook/handler.ts
+   mkdir -p ~/.sendell/hooks/my-hook
+   mv ./hooks/handlers/my-handler.ts ~/.sendell/hooks/my-hook/handler.ts
    ```
 
 2. Create HOOK.md:
@@ -853,7 +853,7 @@ node -e "import('./path/to/handler.ts').then(console.log)"
    ---
    name: my-hook
    description: "My custom hook"
-   metadata: {"clawdbot":{"emoji":"🎯","events":["command:new"]}}
+   metadata: {"sendell":{"emoji":"🎯","events":["command:new"]}}
    ---
 
    # My Hook
@@ -877,7 +877,7 @@ node -e "import('./path/to/handler.ts').then(console.log)"
 
 4. Verify and restart your gateway process:
    ```bash
-   clawdbot hooks list
+   sendell hooks list
    # Should show: 🎯 my-hook ✓
    ```
 
@@ -891,6 +891,6 @@ node -e "import('./path/to/handler.ts').then(console.log)"
 ## See Also
 
 - [CLI Reference: hooks](/cli/hooks)
-- [Bundled Hooks README](https://github.com/clawdbot/clawdbot/tree/main/src/hooks/bundled)
+- [Bundled Hooks README](https://github.com/sendell/sendell/tree/main/src/hooks/bundled)
 - [Webhook Hooks](/automation/webhook)
 - [Configuration](/gateway/configuration#hooks)

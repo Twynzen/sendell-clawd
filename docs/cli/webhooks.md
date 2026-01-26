@@ -1,11 +1,11 @@
 ---
-summary: "CLI reference for `clawdbot webhooks` (webhook helpers + Gmail Pub/Sub)"
+summary: "CLI reference for `sendell webhooks` (webhook helpers + Gmail Pub/Sub)"
 read_when:
-  - You want to wire Gmail Pub/Sub events into Clawdbot
+  - You want to wire Gmail Pub/Sub events into Sendell
   - You want webhook helper commands
 ---
 
-# `clawdbot webhooks`
+# `sendell webhooks`
 
 Webhook helpers and integrations (Gmail Pub/Sub, webhook helpers).
 
@@ -16,8 +16,8 @@ Related:
 ## Gmail
 
 ```bash
-clawdbot webhooks gmail setup --account you@example.com
-clawdbot webhooks gmail run
+sendell webhooks gmail setup --account you@example.com
+sendell webhooks gmail run
 ```
 
 See [Gmail Pub/Sub documentation](/automation/gmail-pubsub) for details.

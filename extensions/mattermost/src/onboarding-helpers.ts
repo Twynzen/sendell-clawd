@@ -1,12 +1,12 @@
-import type { ClawdbotConfig, WizardPrompter } from "clawdbot/plugin-sdk";
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "clawdbot/plugin-sdk";
+import type { SendellConfig, WizardPrompter } from "sendell/plugin-sdk";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "sendell/plugin-sdk";
 
 type PromptAccountIdParams = {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   prompter: WizardPrompter;
   label: string;
   currentId?: string;
-  listAccountIds: (cfg: ClawdbotConfig) => string[];
+  listAccountIds: (cfg: SendellConfig) => string[];
   defaultAccountId: string;
 };
 

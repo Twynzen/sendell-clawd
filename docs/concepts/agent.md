@@ -5,13 +5,13 @@ read_when:
 ---
 # Agent Runtime 🤖
 
-Clawdbot runs a single embedded agent runtime derived from **p-mono**.
+Sendell runs a single embedded agent runtime derived from **p-mono**.
 
 ## Workspace (required)
 
-Clawdbot uses a single agent workspace directory (`agents.defaults.workspace`) as the agent’s **only** working directory (`cwd`) for tools and context.
+Sendell uses a single agent workspace directory (`agents.defaults.workspace`) as the agent’s **only** working directory (`cwd`) for tools and context.
 
-Recommended: use `clawdbot setup` to create `~/.clawdbot/clawdbot.json` if missing and initialize the workspace files.
+Recommended: use `sendell setup` to create `~/.sendell/sendell.json` if missing and initialize the workspace files.
 
 Full workspace layout + backup guide: [Agent workspace](/concepts/agent-workspace)
 
@@ -21,7 +21,7 @@ per-session workspaces under `agents.defaults.sandbox.workspaceRoot` (see
 
 ## Bootstrap files (injected)
 
-Inside `agents.defaults.workspace`, Clawdbot expects these user-editable files:
+Inside `agents.defaults.workspace`, Sendell expects these user-editable files:
 - `AGENTS.md` — operating instructions + “memory”
 - `SOUL.md` — persona, boundaries, tone
 - `TOOLS.md` — user-maintained tool notes (e.g. `imsg`, `sag`, conventions)
@@ -29,11 +29,11 @@ Inside `agents.defaults.workspace`, Clawdbot expects these user-editable files:
 - `IDENTITY.md` — agent name/vibe/emoji
 - `USER.md` — user profile + preferred address
 
-On the first turn of a new session, Clawdbot injects the contents of these files directly into the agent context.
+On the first turn of a new session, Sendell injects the contents of these files directly into the agent context.
 
 Blank files are skipped. Large files are trimmed and truncated with a marker so prompts stay lean (read the file for full content).
 
-If a file is missing, Clawdbot injects a single “missing file” marker line (and `clawdbot setup` will create a safe default template).
+If a file is missing, Sendell injects a single “missing file” marker line (and `sendell setup` will create a safe default template).
 
 `BOOTSTRAP.md` is only created for a **brand new workspace** (no other bootstrap files present). If you delete it after completing the ritual, it should not be recreated on later restarts.
 
@@ -52,16 +52,16 @@ guidance for how *you* want them used.
 
 ## Skills
 
-Clawdbot loads skills from three locations (workspace wins on name conflict):
+Sendell loads skills from three locations (workspace wins on name conflict):
 - Bundled (shipped with the install)
-- Managed/local: `~/.clawdbot/skills`
+- Managed/local: `~/.sendell/skills`
 - Workspace: `<workspace>/skills`
 
 Skills can be gated by config/env (see `skills` in [Gateway configuration](/gateway/configuration)).
 
 ## p-mono integration
 
-Clawdbot reuses pieces of the p-mono codebase (models/tools), but **session management, discovery, and tool wiring are Clawdbot-owned**.
+Sendell reuses pieces of the p-mono codebase (models/tools), but **session management, discovery, and tool wiring are Sendell-owned**.
 
 - No p-coding agent runtime.
 - No `~/.pi/agent` or `<workspace>/.pi` settings are consulted.
@@ -69,9 +69,9 @@ Clawdbot reuses pieces of the p-mono codebase (models/tools), but **session mana
 ## Sessions
 
 Session transcripts are stored as JSONL at:
-- `~/.clawdbot/agents/<agentId>/sessions/<SessionId>.jsonl`
+- `~/.sendell/agents/<agentId>/sessions/<SessionId>.jsonl`
 
-The session ID is stable and chosen by Clawdbot.
+The session ID is stable and chosen by Sendell.
 Legacy Pi/Tau session folders are **not** read.
 
 ## Steering while streaming
@@ -104,7 +104,7 @@ Model refs in config (for example `agents.defaults.model` and `agents.defaults.m
 
 - Use `provider/model` when configuring models.
 - If the model ID itself contains `/` (OpenRouter-style), include the provider prefix (example: `openrouter/moonshotai/kimi-k2`).
-- If you omit the provider, Clawdbot treats the input as an alias or a model for the **default provider** (only works when there is no `/` in the model ID).
+- If you omit the provider, Sendell treats the input as an alias or a model for the **default provider** (only works when there is no `/` in the model ID).
 
 ## Configuration (minimal)
 

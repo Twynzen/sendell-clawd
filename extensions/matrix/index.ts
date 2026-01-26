@@ -1,5 +1,5 @@
-import type { ClawdbotPluginApi } from "clawdbot/plugin-sdk";
-import { emptyPluginConfigSchema } from "clawdbot/plugin-sdk";
+import type { SendellPluginApi } from "sendell/plugin-sdk";
+import { emptyPluginConfigSchema } from "sendell/plugin-sdk";
 
 import { matrixPlugin } from "./src/channel.js";
 import { setMatrixRuntime } from "./src/runtime.js";
@@ -9,7 +9,7 @@ const plugin = {
   name: "Matrix",
   description: "Matrix channel plugin (matrix-js-sdk)",
   configSchema: emptyPluginConfigSchema(),
-  register(api: ClawdbotPluginApi) {
+  register(api: SendellPluginApi) {
     setMatrixRuntime(api.runtime);
     api.registerChannel({ plugin: matrixPlugin });
   },

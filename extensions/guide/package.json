@@ -1,0 +1,11 @@
+{
+  "name": "@sendell/guide",
+  "version": "2026.1.25",
+  "type": "module",
+  "description": "Guide workflow tool plugin (typed pipelines + resumable approvals)",
+  "sendell": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

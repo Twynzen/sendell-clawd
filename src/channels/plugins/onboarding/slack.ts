@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "../../../config/config.js";
+import type { SendellConfig } from "../../../config/config.js";
 import type { DmPolicy } from "../../../config/types.js";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "../../../routing/session-key.js";
 import {
@@ -16,7 +16,7 @@ import { addWildcardAllowFrom, promptAccountId } from "./helpers.js";
 
 const channel = "slack" as const;
 
-function setSlackDmPolicy(cfg: ClawdbotConfig, dmPolicy: DmPolicy) {
+function setSlackDmPolicy(cfg: SendellConfig, dmPolicy: DmPolicy) {
   const allowFrom =
     dmPolicy === "open" ? addWildcardAllowFrom(cfg.channels?.slack?.dm?.allowFrom) : undefined;
   return {
@@ -37,11 +37,11 @@ function setSlackDmPolicy(cfg: ClawdbotConfig, dmPolicy: DmPolicy) {
 }
 
 function buildSlackManifest(botName: string) {
-  const safeName = botName.trim() || "Clawdbot";
+  const safeName = botName.trim() || "Sendell";
   const manifest = {
     display_information: {
       name: safeName,
-      description: `${safeName} connector for Clawdbot`,
+      description: `${safeName} connector for Sendell`,
     },
     features: {
       bot_user: {
@@ -54,8 +54,8 @@ function buildSlackManifest(botName: string) {
       },
       slash_commands: [
         {
-          command: "/clawd",
-          description: "Send a message to Clawdbot",
+          command: "/sendell",
+          description: "Send a message to Sendell",
           should_escape: false,
         },
       ],
@@ -125,10 +125,10 @@ async function noteSlackTokenHelp(prompter: WizardPrompter, botName: string): Pr
 }
 
 function setSlackGroupPolicy(
-  cfg: ClawdbotConfig,
+  cfg: SendellConfig,
   accountId: string,
   groupPolicy: "open" | "allowlist" | "disabled",
-): ClawdbotConfig {
+): SendellConfig {
   if (accountId === DEFAULT_ACCOUNT_ID) {
     return {
       ...cfg,
@@ -163,10 +163,10 @@ function setSlackGroupPolicy(
 }
 
 function setSlackChannelAllowlist(
-  cfg: ClawdbotConfig,
+  cfg: SendellConfig,
   accountId: string,
   channelKeys: string[],
-): ClawdbotConfig {
+): SendellConfig {
   const channels = Object.fromEntries(channelKeys.map((key) => [key, { allow: true }]));
   if (accountId === DEFAULT_ACCOUNT_ID) {
     return {
@@ -201,7 +201,7 @@ function setSlackChannelAllowlist(
   };
 }
 
-function setSlackAllowFrom(cfg: ClawdbotConfig, allowFrom: string[]): ClawdbotConfig {
+function setSlackAllowFrom(cfg: SendellConfig, allowFrom: string[]): SendellConfig {
   return {
     ...cfg,
     channels: {
@@ -226,10 +226,10 @@ function parseSlackAllowFromInput(raw: string): string[] {
 }
 
 async function promptSlackAllowFrom(params: {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   prompter: WizardPrompter;
   accountId?: string;
-}): Promise<ClawdbotConfig> {
+}): Promise<SendellConfig> {
   const accountId =
     params.accountId && normalizeAccountId(params.accountId)
       ? (normalizeAccountId(params.accountId) ?? DEFAULT_ACCOUNT_ID)
@@ -364,7 +364,7 @@ export const slackOnboardingAdapter: ChannelOnboardingAdapter = {
     const slackBotName = String(
       await prompter.text({
         message: "Slack bot display name (used for manifest)",
-        initialValue: "Clawdbot",
+        initialValue: "Sendell",
       }),
     ).trim();
     if (!accountConfigured) {

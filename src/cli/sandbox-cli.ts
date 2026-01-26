@@ -15,30 +15,30 @@ type CommandOptions = Record<string, unknown>;
 
 const SANDBOX_EXAMPLES = {
   main: [
-    ["clawdbot sandbox list", "List all sandbox containers."],
-    ["clawdbot sandbox list --browser", "List only browser containers."],
-    ["clawdbot sandbox recreate --all", "Recreate all containers."],
-    ["clawdbot sandbox recreate --session main", "Recreate a specific session."],
-    ["clawdbot sandbox recreate --agent mybot", "Recreate agent containers."],
-    ["clawdbot sandbox explain", "Explain effective sandbox config."],
+    ["sendell sandbox list", "List all sandbox containers."],
+    ["sendell sandbox list --browser", "List only browser containers."],
+    ["sendell sandbox recreate --all", "Recreate all containers."],
+    ["sendell sandbox recreate --session main", "Recreate a specific session."],
+    ["sendell sandbox recreate --agent mybot", "Recreate agent containers."],
+    ["sendell sandbox explain", "Explain effective sandbox config."],
   ],
   list: [
-    ["clawdbot sandbox list", "List all sandbox containers."],
-    ["clawdbot sandbox list --browser", "List only browser containers."],
-    ["clawdbot sandbox list --json", "JSON output."],
+    ["sendell sandbox list", "List all sandbox containers."],
+    ["sendell sandbox list --browser", "List only browser containers."],
+    ["sendell sandbox list --json", "JSON output."],
   ],
   recreate: [
-    ["clawdbot sandbox recreate --all", "Recreate all containers."],
-    ["clawdbot sandbox recreate --session main", "Recreate a specific session."],
-    ["clawdbot sandbox recreate --agent mybot", "Recreate a specific agent (includes sub-agents)."],
-    ["clawdbot sandbox recreate --browser --all", "Recreate only browser containers."],
-    ["clawdbot sandbox recreate --all --force", "Skip confirmation."],
+    ["sendell sandbox recreate --all", "Recreate all containers."],
+    ["sendell sandbox recreate --session main", "Recreate a specific session."],
+    ["sendell sandbox recreate --agent mybot", "Recreate a specific agent (includes sub-agents)."],
+    ["sendell sandbox recreate --browser --all", "Recreate only browser containers."],
+    ["sendell sandbox recreate --all --force", "Skip confirmation."],
   ],
   explain: [
-    ["clawdbot sandbox explain", "Show effective sandbox config."],
-    ["clawdbot sandbox explain --session agent:main:main", "Explain a specific session."],
-    ["clawdbot sandbox explain --agent work", "Explain an agent sandbox."],
-    ["clawdbot sandbox explain --json", "JSON output."],
+    ["sendell sandbox explain", "Show effective sandbox config."],
+    ["sendell sandbox explain --session agent:main:main", "Explain a specific session."],
+    ["sendell sandbox explain --agent work", "Explain an agent sandbox."],
+    ["sendell sandbox explain --json", "JSON output."],
   ],
 } as const;
 
@@ -68,7 +68,7 @@ export function registerSandboxCli(program: Command) {
     .addHelpText(
       "after",
       () =>
-        `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/sandbox", "docs.clawd.bot/cli/sandbox")}\n`,
+        `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/sandbox", "docs.sendell.bot/cli/sandbox")}\n`,
     )
     .action(() => {
       sandbox.help({ error: true });

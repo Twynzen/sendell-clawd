@@ -12,7 +12,7 @@ import type { VoiceCallConfig } from "./config.js";
 export type VoiceResponseParams = {
   /** Voice call config */
   voiceConfig: VoiceCallConfig;
-  /** Core Clawdbot config */
+  /** Core Sendell config */
   coreConfig: CoreConfig;
   /** Call ID for session tracking */
   callId: string;

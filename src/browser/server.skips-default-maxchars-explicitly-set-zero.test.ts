@@ -92,9 +92,9 @@ vi.mock("../config/config.js", async (importOriginal) => {
         color: "#FF4500",
         attachOnly: cfgAttachOnly,
         headless: true,
-        defaultProfile: "clawd",
+        defaultProfile: "sendell",
         profiles: {
-          clawd: { cdpPort: testPort + 1, color: "#FF4500" },
+          sendell: { cdpPort: testPort + 1, color: "#FF4500" },
         },
       },
     }),
@@ -112,13 +112,13 @@ vi.mock("./chrome.js", () => ({
     return {
       pid: 123,
       exe: { kind: "chrome", path: "/fake/chrome" },
-      userDataDir: "/tmp/clawd",
+      userDataDir: "/tmp/sendell",
       cdpPort: profile.cdpPort,
       startedAt: Date.now(),
       proc,
     };
   }),
-  resolveClawdUserDataDir: vi.fn(() => "/tmp/clawd"),
+  resolveClawdUserDataDir: vi.fn(() => "/tmp/sendell"),
   stopClawdChrome: vi.fn(async () => {
     reachable = false;
   }),
@@ -404,9 +404,9 @@ describe("browser control server", () => {
         headless: true,
         noSandbox: false,
         attachOnly: true,
-        defaultProfile: "clawd",
+        defaultProfile: "sendell",
         profiles: {
-          clawd: { cdpPort: testPort + 1, color: "#FF4500" },
+          sendell: { cdpPort: testPort + 1, color: "#FF4500" },
         },
       },
       onEnsureAttachTarget: ensured,

@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/matrix",
+  "name": "@sendell/matrix",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Matrix channel plugin",
-  "clawdbot": {
+  "description": "Sendell Matrix channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ],
@@ -18,7 +18,7 @@
       "quickstartAllowFrom": true
     },
     "install": {
-      "npmSpec": "@clawdbot/matrix",
+      "npmSpec": "@sendell/matrix",
       "localPath": "extensions/matrix",
       "defaultChoice": "npm"
     }
@@ -31,6 +31,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "clawdbot": "workspace:*"
+    "sendell": "workspace:*"
   }
 }

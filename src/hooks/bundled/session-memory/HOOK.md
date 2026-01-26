@@ -1,15 +1,15 @@
 ---
 name: session-memory
 description: "Save session context to memory when /new command is issued"
-homepage: https://docs.clawd.bot/hooks#session-memory
+homepage: https://docs.sendell.bot/hooks#session-memory
 metadata:
   {
-    "clawdbot":
+    "sendell":
       {
         "emoji": "💾",
         "events": ["command:new"],
         "requires": { "config": ["workspace.dir"] },
-        "install": [{ "id": "bundled", "kind": "bundled", "label": "Bundled with Clawdbot" }],
+        "install": [{ "id": "bundled", "kind": "bundled", "label": "Bundled with Sendell" }],
       },
   }
 ---
@@ -59,7 +59,7 @@ The hook uses your configured LLM provider to generate slugs, so it works with a
 
 No additional configuration required. The hook automatically:
 
-- Uses your workspace directory (`~/clawd` by default)
+- Uses your workspace directory (`~/sendell` by default)
 - Uses your configured LLM for slug generation
 - Falls back to timestamp slugs if LLM is unavailable
 
@@ -68,7 +68,7 @@ No additional configuration required. The hook automatically:
 To disable this hook:
 
 ```bash
-clawdbot hooks disable session-memory
+sendell hooks disable session-memory
 ```
 
 Or remove it from your config:

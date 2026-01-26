@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/discord",
+  "name": "@sendell/discord",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Discord channel plugin",
-  "clawdbot": {
+  "description": "Sendell Discord channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

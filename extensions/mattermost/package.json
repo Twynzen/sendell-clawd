@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/mattermost",
+  "name": "@sendell/mattermost",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Mattermost channel plugin",
-  "clawdbot": {
+  "description": "Sendell Mattermost channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ],
@@ -17,7 +17,7 @@
       "order": 65
     },
     "install": {
-      "npmSpec": "@clawdbot/mattermost",
+      "npmSpec": "@sendell/mattermost",
       "localPath": "extensions/mattermost",
       "defaultChoice": "npm"
     }

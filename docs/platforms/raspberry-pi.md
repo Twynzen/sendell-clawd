@@ -1,16 +1,16 @@
 ---
-summary: "Clawdbot on Raspberry Pi (budget self-hosted setup)"
+summary: "Sendell on Raspberry Pi (budget self-hosted setup)"
 read_when:
-  - Setting up Clawdbot on a Raspberry Pi
-  - Running Clawdbot on ARM devices
+  - Setting up Sendell on a Raspberry Pi
+  - Running Sendell on ARM devices
   - Building a cheap always-on personal AI
 ---
 
-# Clawdbot on Raspberry Pi
+# Sendell on Raspberry Pi
 
 ## Goal
 
-Run a persistent, always-on Clawdbot Gateway on a Raspberry Pi for **~$35-80** one-time cost (no monthly fees).
+Run a persistent, always-on Sendell Gateway on a Raspberry Pi for **~$35-80** one-time cost (no monthly fees).
 
 Perfect for:
 - 24/7 personal AI assistant
@@ -105,19 +105,19 @@ echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 ```
 
-## 6) Install Clawdbot
+## 6) Install Sendell
 
 ### Option A: Standard Install (Recommended)
 
 ```bash
-curl -fsSL https://clawd.bot/install.sh | bash
+curl -fsSL https://sendell.bot/install.sh | bash
 ```
 
 ### Option B: Hackable Install (For tinkering)
 
 ```bash
-git clone https://github.com/clawdbot/clawdbot.git
-cd clawdbot
+git clone https://github.com/sendell/sendell.git
+cd sendell
 npm install
 npm run build
 npm link
@@ -128,7 +128,7 @@ The hackable install gives you direct access to logs and code — useful for deb
 ## 7) Run Onboarding
 
 ```bash
-clawdbot onboard --install-daemon
+sendell onboard --install-daemon
 ```
 
 Follow the wizard:
@@ -141,13 +141,13 @@ Follow the wizard:
 
 ```bash
 # Check status
-clawdbot status
+sendell status
 
 # Check service
-sudo systemctl status clawdbot
+sudo systemctl status sendell
 
 # View logs
-journalctl -u clawdbot -f
+journalctl -u sendell -f
 ```
 
 ## 9) Access the Dashboard
@@ -170,8 +170,8 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 
 # Update config
-clawdbot config set gateway.bind tailnet
-sudo systemctl restart clawdbot
+sendell config set gateway.bind tailnet
+sudo systemctl restart sendell
 ```
 
 ---
@@ -218,7 +218,7 @@ htop
 
 ### Binary Compatibility
 
-Most Clawdbot features work on ARM64, but some external binaries may need ARM builds:
+Most Sendell features work on ARM64, but some external binaries may need ARM builds:
 
 | Tool | ARM64 Status | Notes |
 |------|--------------|-------|
@@ -268,13 +268,13 @@ The onboarding wizard sets this up, but to verify:
 
 ```bash
 # Check service is enabled
-sudo systemctl is-enabled clawdbot
+sudo systemctl is-enabled sendell
 
 # Enable if not
-sudo systemctl enable clawdbot
+sudo systemctl enable sendell
 
 # Start on boot
-sudo systemctl start clawdbot
+sudo systemctl start sendell
 ```
 
 ---
@@ -301,12 +301,12 @@ free -h
 
 ```bash
 # Check logs
-journalctl -u clawdbot --no-pager -n 100
+journalctl -u sendell --no-pager -n 100
 
 # Common fix: rebuild
-cd ~/clawdbot  # if using hackable install
+cd ~/sendell  # if using hackable install
 npm run build
-sudo systemctl restart clawdbot
+sudo systemctl restart sendell
 ```
 
 ### ARM Binary Issues

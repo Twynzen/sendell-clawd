@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { BrowserProfileConfig, ClawdbotConfig } from "../config/config.js";
+import type { BrowserProfileConfig, SendellConfig } from "../config/config.js";
 import { loadConfig, writeConfigFile } from "../config/config.js";
 import { deriveDefaultBrowserCdpPortRange } from "../config/port-defaults.js";
 import { DEFAULT_BROWSER_DEFAULT_PROFILE_NAME } from "./constants.js";
@@ -21,7 +21,7 @@ export type CreateProfileParams = {
   name: string;
   color?: string;
   cdpUrl?: string;
-  driver?: "clawd" | "extension";
+  driver?: "sendell" | "extension";
 };
 
 export type CreateProfileResult = {
@@ -93,7 +93,7 @@ export function createBrowserProfilesService(ctx: BrowserRouteContext) {
       };
     }
 
-    const nextConfig: ClawdbotConfig = {
+    const nextConfig: SendellConfig = {
       ...cfg,
       browser: {
         ...cfg.browser,
@@ -162,7 +162,7 @@ export function createBrowserProfilesService(ctx: BrowserRouteContext) {
     }
 
     const { [name]: _removed, ...remainingProfiles } = profiles;
-    const nextConfig: ClawdbotConfig = {
+    const nextConfig: SendellConfig = {
       ...cfg,
       browser: {
         ...cfg.browser,

@@ -21,52 +21,52 @@ describe("systemd runtime parsing", () => {
 });
 
 describe("resolveSystemdUserUnitPath", () => {
-  it("uses default service name when CLAWDBOT_PROFILE is default", () => {
-    const env = { HOME: "/home/test", CLAWDBOT_PROFILE: "default" };
+  it("uses default service name when SENDELL_PROFILE is default", () => {
+    const env = { HOME: "/home/test", SENDELL_PROFILE: "default" };
     expect(resolveSystemdUserUnitPath(env)).toBe(
-      "/home/test/.config/systemd/user/clawdbot-gateway.service",
+      "/home/test/.config/systemd/user/sendell-gateway.service",
     );
   });
 
-  it("uses default service name when CLAWDBOT_PROFILE is unset", () => {
+  it("uses default service name when SENDELL_PROFILE is unset", () => {
     const env = { HOME: "/home/test" };
     expect(resolveSystemdUserUnitPath(env)).toBe(
-      "/home/test/.config/systemd/user/clawdbot-gateway.service",
+      "/home/test/.config/systemd/user/sendell-gateway.service",
     );
   });
 
-  it("uses profile-specific service name when CLAWDBOT_PROFILE is set to a custom value", () => {
-    const env = { HOME: "/home/test", CLAWDBOT_PROFILE: "jbphoenix" };
+  it("uses profile-specific service name when SENDELL_PROFILE is set to a custom value", () => {
+    const env = { HOME: "/home/test", SENDELL_PROFILE: "jbphoenix" };
     expect(resolveSystemdUserUnitPath(env)).toBe(
-      "/home/test/.config/systemd/user/clawdbot-gateway-jbphoenix.service",
+      "/home/test/.config/systemd/user/sendell-gateway-jbphoenix.service",
     );
   });
 
-  it("prefers CLAWDBOT_SYSTEMD_UNIT over CLAWDBOT_PROFILE", () => {
+  it("prefers SENDELL_SYSTEMD_UNIT over SENDELL_PROFILE", () => {
     const env = {
       HOME: "/home/test",
-      CLAWDBOT_PROFILE: "jbphoenix",
-      CLAWDBOT_SYSTEMD_UNIT: "custom-unit",
+      SENDELL_PROFILE: "jbphoenix",
+      SENDELL_SYSTEMD_UNIT: "custom-unit",
     };
     expect(resolveSystemdUserUnitPath(env)).toBe(
       "/home/test/.config/systemd/user/custom-unit.service",
     );
   });
 
-  it("handles CLAWDBOT_SYSTEMD_UNIT with .service suffix", () => {
+  it("handles SENDELL_SYSTEMD_UNIT with .service suffix", () => {
     const env = {
       HOME: "/home/test",
-      CLAWDBOT_SYSTEMD_UNIT: "custom-unit.service",
+      SENDELL_SYSTEMD_UNIT: "custom-unit.service",
     };
     expect(resolveSystemdUserUnitPath(env)).toBe(
       "/home/test/.config/systemd/user/custom-unit.service",
     );
   });
 
-  it("trims whitespace from CLAWDBOT_SYSTEMD_UNIT", () => {
+  it("trims whitespace from SENDELL_SYSTEMD_UNIT", () => {
     const env = {
       HOME: "/home/test",
-      CLAWDBOT_SYSTEMD_UNIT: "  custom-unit  ",
+      SENDELL_SYSTEMD_UNIT: "  custom-unit  ",
     };
     expect(resolveSystemdUserUnitPath(env)).toBe(
       "/home/test/.config/systemd/user/custom-unit.service",
@@ -74,23 +74,23 @@ describe("resolveSystemdUserUnitPath", () => {
   });
 
   it("handles case-insensitive 'Default' profile", () => {
-    const env = { HOME: "/home/test", CLAWDBOT_PROFILE: "Default" };
+    const env = { HOME: "/home/test", SENDELL_PROFILE: "Default" };
     expect(resolveSystemdUserUnitPath(env)).toBe(
-      "/home/test/.config/systemd/user/clawdbot-gateway.service",
+      "/home/test/.config/systemd/user/sendell-gateway.service",
     );
   });
 
   it("handles case-insensitive 'DEFAULT' profile", () => {
-    const env = { HOME: "/home/test", CLAWDBOT_PROFILE: "DEFAULT" };
+    const env = { HOME: "/home/test", SENDELL_PROFILE: "DEFAULT" };
     expect(resolveSystemdUserUnitPath(env)).toBe(
-      "/home/test/.config/systemd/user/clawdbot-gateway.service",
+      "/home/test/.config/systemd/user/sendell-gateway.service",
     );
   });
 
-  it("trims whitespace from CLAWDBOT_PROFILE", () => {
-    const env = { HOME: "/home/test", CLAWDBOT_PROFILE: "  myprofile  " };
+  it("trims whitespace from SENDELL_PROFILE", () => {
+    const env = { HOME: "/home/test", SENDELL_PROFILE: "  myprofile  " };
     expect(resolveSystemdUserUnitPath(env)).toBe(
-      "/home/test/.config/systemd/user/clawdbot-gateway-myprofile.service",
+      "/home/test/.config/systemd/user/sendell-gateway-myprofile.service",
     );
   });
 });

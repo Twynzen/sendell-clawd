@@ -92,9 +92,9 @@ vi.mock("../config/config.js", async (importOriginal) => {
         color: "#FF4500",
         attachOnly: cfgAttachOnly,
         headless: true,
-        defaultProfile: "clawd",
+        defaultProfile: "sendell",
         profiles: {
-          clawd: { cdpPort: testPort + 1, color: "#FF4500" },
+          sendell: { cdpPort: testPort + 1, color: "#FF4500" },
         },
       },
     }),
@@ -112,13 +112,13 @@ vi.mock("./chrome.js", () => ({
     return {
       pid: 123,
       exe: { kind: "chrome", path: "/fake/chrome" },
-      userDataDir: "/tmp/clawd",
+      userDataDir: "/tmp/sendell",
       cdpPort: profile.cdpPort,
       startedAt: Date.now(),
       proc,
     };
   }),
-  resolveClawdUserDataDir: vi.fn(() => "/tmp/clawd"),
+  resolveClawdUserDataDir: vi.fn(() => "/tmp/sendell"),
   stopClawdChrome: vi.fn(async () => {
     reachable = false;
   }),
@@ -331,11 +331,11 @@ describe("profile CRUD endpoints", () => {
     await startBrowserControlServerFromConfig();
     const base = `http://127.0.0.1:${testPort}`;
 
-    // "clawd" already exists as the default profile
+    // "sendell" already exists as the default profile
     const result = await realFetch(`${base}/profiles/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "clawd" }),
+      body: JSON.stringify({ name: "sendell" }),
     });
     expect(result.status).toBe(409);
     const body = (await result.json()) as { error: string };
@@ -396,8 +396,8 @@ describe("profile CRUD endpoints", () => {
     await startBrowserControlServerFromConfig();
     const base = `http://127.0.0.1:${testPort}`;
 
-    // clawd is the default profile
-    const result = await realFetch(`${base}/profiles/clawd`, {
+    // sendell is the default profile
+    const result = await realFetch(`${base}/profiles/sendell`, {
       method: "DELETE",
     });
     expect(result.status).toBe(400);

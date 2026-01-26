@@ -81,36 +81,36 @@ vi.mock("./progress.js", () => ({
 
 describe("daemon-cli coverage", () => {
   const originalEnv = {
-    CLAWDBOT_STATE_DIR: process.env.CLAWDBOT_STATE_DIR,
-    CLAWDBOT_CONFIG_PATH: process.env.CLAWDBOT_CONFIG_PATH,
-    CLAWDBOT_GATEWAY_PORT: process.env.CLAWDBOT_GATEWAY_PORT,
-    CLAWDBOT_PROFILE: process.env.CLAWDBOT_PROFILE,
+    SENDELL_STATE_DIR: process.env.SENDELL_STATE_DIR,
+    SENDELL_CONFIG_PATH: process.env.SENDELL_CONFIG_PATH,
+    SENDELL_GATEWAY_PORT: process.env.SENDELL_GATEWAY_PORT,
+    SENDELL_PROFILE: process.env.SENDELL_PROFILE,
   };
 
   beforeEach(() => {
-    process.env.CLAWDBOT_STATE_DIR = "/tmp/clawdbot-cli-state";
-    process.env.CLAWDBOT_CONFIG_PATH = "/tmp/clawdbot-cli-state/clawdbot.json";
-    delete process.env.CLAWDBOT_GATEWAY_PORT;
-    delete process.env.CLAWDBOT_PROFILE;
+    process.env.SENDELL_STATE_DIR = "/tmp/sendell-cli-state";
+    process.env.SENDELL_CONFIG_PATH = "/tmp/sendell-cli-state/sendell.json";
+    delete process.env.SENDELL_GATEWAY_PORT;
+    delete process.env.SENDELL_PROFILE;
     serviceReadCommand.mockResolvedValue(null);
   });
 
   afterEach(() => {
-    if (originalEnv.CLAWDBOT_STATE_DIR !== undefined)
-      process.env.CLAWDBOT_STATE_DIR = originalEnv.CLAWDBOT_STATE_DIR;
-    else delete process.env.CLAWDBOT_STATE_DIR;
+    if (originalEnv.SENDELL_STATE_DIR !== undefined)
+      process.env.SENDELL_STATE_DIR = originalEnv.SENDELL_STATE_DIR;
+    else delete process.env.SENDELL_STATE_DIR;
 
-    if (originalEnv.CLAWDBOT_CONFIG_PATH !== undefined)
-      process.env.CLAWDBOT_CONFIG_PATH = originalEnv.CLAWDBOT_CONFIG_PATH;
-    else delete process.env.CLAWDBOT_CONFIG_PATH;
+    if (originalEnv.SENDELL_CONFIG_PATH !== undefined)
+      process.env.SENDELL_CONFIG_PATH = originalEnv.SENDELL_CONFIG_PATH;
+    else delete process.env.SENDELL_CONFIG_PATH;
 
-    if (originalEnv.CLAWDBOT_GATEWAY_PORT !== undefined)
-      process.env.CLAWDBOT_GATEWAY_PORT = originalEnv.CLAWDBOT_GATEWAY_PORT;
-    else delete process.env.CLAWDBOT_GATEWAY_PORT;
+    if (originalEnv.SENDELL_GATEWAY_PORT !== undefined)
+      process.env.SENDELL_GATEWAY_PORT = originalEnv.SENDELL_GATEWAY_PORT;
+    else delete process.env.SENDELL_GATEWAY_PORT;
 
-    if (originalEnv.CLAWDBOT_PROFILE !== undefined)
-      process.env.CLAWDBOT_PROFILE = originalEnv.CLAWDBOT_PROFILE;
-    else delete process.env.CLAWDBOT_PROFILE;
+    if (originalEnv.SENDELL_PROFILE !== undefined)
+      process.env.SENDELL_PROFILE = originalEnv.SENDELL_PROFILE;
+    else delete process.env.SENDELL_PROFILE;
   });
 
   it("probes gateway status by default", async () => {
@@ -140,12 +140,12 @@ describe("daemon-cli coverage", () => {
     serviceReadCommand.mockResolvedValueOnce({
       programArguments: ["/bin/node", "cli", "gateway", "--port", "19001"],
       environment: {
-        CLAWDBOT_PROFILE: "dev",
-        CLAWDBOT_STATE_DIR: "/tmp/clawdbot-daemon-state",
-        CLAWDBOT_CONFIG_PATH: "/tmp/clawdbot-daemon-state/clawdbot.json",
-        CLAWDBOT_GATEWAY_PORT: "19001",
+        SENDELL_PROFILE: "dev",
+        SENDELL_STATE_DIR: "/tmp/sendell-daemon-state",
+        SENDELL_CONFIG_PATH: "/tmp/sendell-daemon-state/sendell.json",
+        SENDELL_GATEWAY_PORT: "19001",
       },
-      sourcePath: "/tmp/com.clawdbot.gateway.plist",
+      sourcePath: "/tmp/com.sendell.gateway.plist",
     });
 
     const { registerDaemonCli } = await import("./daemon-cli.js");

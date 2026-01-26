@@ -1,10 +1,10 @@
 ---
-summary: "CLI reference for `clawdbot onboard` (interactive onboarding wizard)"
+summary: "CLI reference for `sendell onboard` (interactive onboarding wizard)"
 read_when:
   - You want guided setup for gateway, workspace, auth, channels, and skills
 ---
 
-# `clawdbot onboard`
+# `sendell onboard`
 
 Interactive onboarding wizard (local or remote Gateway setup).
 
@@ -14,10 +14,10 @@ Related:
 ## Examples
 
 ```bash
-clawdbot onboard
-clawdbot onboard --flow quickstart
-clawdbot onboard --flow manual
-clawdbot onboard --mode remote --remote-url ws://gateway-host:18789
+sendell onboard
+sendell onboard --flow quickstart
+sendell onboard --flow manual
+sendell onboard --mode remote --remote-url ws://gateway-host:18789
 ```
 
 Flow notes:

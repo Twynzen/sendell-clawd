@@ -1,9 +1,9 @@
 ---
-summary: "Schema-accurate configuration examples for common Clawdbot setups"
+summary: "Schema-accurate configuration examples for common Sendell setups"
 read_when:
-  - Learning how to configure Clawdbot
+  - Learning how to configure Sendell
   - Looking for configuration examples
-  - Setting up Clawdbot for the first time
+  - Setting up Sendell for the first time
 ---
 # Configuration Examples
 
@@ -14,23 +14,23 @@ Examples below are aligned with the current config schema. For the exhaustive re
 ### Absolute minimum
 ```json5
 {
-  agent: { workspace: "~/clawd" },
+  agent: { workspace: "~/sendell" },
   channels: { whatsapp: { allowFrom: ["+15555550123"] } }
 }
 ```
 
-Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
+Save to `~/.sendell/sendell.json` and you can DM the bot from that number.
 
 ### Recommended starter
 ```json5
 {
   identity: {
-    name: "Clawd",
+    name: "Sendell",
     theme: "helpful assistant",
     emoji: "🦞"
   },
   agent: {
-    workspace: "~/clawd",
+    workspace: "~/sendell",
     model: { primary: "anthropic/claude-sonnet-4-5" }
   },
   channels: {
@@ -85,7 +85,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
   // Logging
   logging: {
     level: "info",
-    file: "/tmp/clawdbot/clawdbot.log",
+    file: "/tmp/sendell/sendell.log",
     consoleLevel: "info",
     consoleStyle: "pretty",
     redactSensitive: "tools"
@@ -93,7 +93,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
 
   // Message formatting
   messages: {
-    messagePrefix: "[clawdbot]",
+    messagePrefix: "[sendell]",
     responsePrefix: ">",
     ackReaction: "👀",
     ackReactionScope: "group-mentions"
@@ -102,7 +102,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
   // Routing + queue
   routing: {
     groupChat: {
-      mentionPatterns: ["@clawd", "clawdbot"],
+      mentionPatterns: ["@sendell", "sendell"],
       historyLimit: 50
     },
     queue: {
@@ -155,7 +155,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
       discord: { mode: "idle", idleMinutes: 10080 }
     },
     resetTriggers: ["/new", "/reset"],
-    store: "~/.clawdbot/agents/default/sessions/sessions.json",
+    store: "~/.sendell/agents/default/sessions/sessions.json",
     typingIntervalSeconds: 5,
     sendPolicy: {
       default: "allow",
@@ -190,7 +190,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
       dm: { enabled: true, allowFrom: ["steipete"] },
       guilds: {
         "123456789012345678": {
-          slug: "friends-of-clawd",
+          slug: "friends-of-sendell",
           requireMention: false,
           channels: {
             general: { allow: true },
@@ -210,7 +210,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
       dm: { enabled: true, allowFrom: ["U123"] },
       slashCommand: {
         enabled: true,
-        name: "clawd",
+        name: "sendell",
         sessionPrefix: "slack:slash",
         ephemeral: true
       }
@@ -220,7 +220,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
   // Agent runtime
   agents: {
     defaults: {
-      workspace: "~/clawd",
+      workspace: "~/sendell",
       userTimezone: "America/Chicago",
       model: {
         primary: "anthropic/claude-sonnet-4-5",
@@ -272,9 +272,9 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
       sandbox: {
         mode: "non-main",
         perSession: true,
-        workspaceRoot: "~/.clawdbot/sandboxes",
+        workspaceRoot: "~/.sendell/sandboxes",
         docker: {
-          image: "clawdbot-sandbox:bookworm-slim",
+          image: "sendell-sandbox:bookworm-slim",
           workdir: "/workspace",
           readOnlyRoot: true,
           tmpfs: ["/tmp", "/var/tmp", "/run"],
@@ -339,7 +339,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
   // Cron jobs
   cron: {
     enabled: true,
-    store: "~/.clawdbot/cron/cron.json",
+    store: "~/.sendell/cron/cron.json",
     maxConcurrentRuns: 2
   },
 
@@ -349,7 +349,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
     path: "/hooks",
     token: "shared-secret",
     presets: ["gmail"],
-    transformsDir: "~/.clawdbot/hooks",
+    transformsDir: "~/.sendell/hooks",
     mappings: [
       {
         id: "gmail-hook",
@@ -369,7 +369,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
       }
     ],
     gmail: {
-      account: "clawdbot@gmail.com",
+      account: "sendell@gmail.com",
       label: "INBOX",
       topic: "projects/<project-id>/topics/gog-gmail-watch",
       subscription: "gog-gmail-watch-push",
@@ -388,7 +388,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
     mode: "local",
     port: 18789,
     bind: "loopback",
-    controlUi: { enabled: true, basePath: "/clawdbot" },
+    controlUi: { enabled: true, basePath: "/sendell" },
     auth: {
       mode: "token",
       token: "gateway-token",
@@ -425,7 +425,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
 ### Multi-platform setup
 ```json5
 {
-  agent: { workspace: "~/clawd" },
+  agent: { workspace: "~/sendell" },
   channels: {
     whatsapp: { allowFrom: ["+15555550123"] },
     telegram: {
@@ -462,7 +462,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
     }
   },
   agent: {
-    workspace: "~/clawd",
+    workspace: "~/sendell",
     model: {
       primary: "anthropic/claude-sonnet-4-5",
       fallbacks: ["anthropic/claude-opus-4-5"]
@@ -500,7 +500,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
     }
   },
   agent: {
-    workspace: "~/clawd",
+    workspace: "~/sendell",
     model: {
       primary: "anthropic/claude-opus-4-5",
       fallbacks: ["minimax/MiniMax-M2.1"]
@@ -517,7 +517,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
     theme: "professional assistant"
   },
   agent: {
-    workspace: "~/work-clawd",
+    workspace: "~/work-sendell",
     elevated: { enabled: false }
   },
   channels: {
@@ -537,7 +537,7 @@ Save to `~/.clawdbot/clawdbot.json` and you can DM the bot from that number.
 ```json5
 {
   agent: {
-    workspace: "~/clawd",
+    workspace: "~/sendell",
     model: { primary: "lmstudio/minimax-m2.1-gs32" }
   },
   models: {

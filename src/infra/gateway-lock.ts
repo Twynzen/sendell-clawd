@@ -81,7 +81,7 @@ function isGatewayArgv(args: string[]): boolean {
   }
 
   const exe = normalized[0] ?? "";
-  return exe.endsWith("/clawdbot") || exe === "clawdbot";
+  return exe.endsWith("/sendell") || exe === "sendell";
 }
 
 function readLinuxCmdline(pid: number): string[] | null {
@@ -161,7 +161,7 @@ export async function acquireGatewayLock(
   const env = opts.env ?? process.env;
   const allowInTests = opts.allowInTests === true;
   if (
-    env.CLAWDBOT_ALLOW_MULTI_GATEWAY === "1" ||
+    env.SENDELL_ALLOW_MULTI_GATEWAY === "1" ||
     (!allowInTests && (env.VITEST || env.NODE_ENV === "test"))
   ) {
     return null;

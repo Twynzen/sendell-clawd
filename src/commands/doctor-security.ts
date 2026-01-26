@@ -1,14 +1,14 @@
 import { resolveChannelDefaultAccountId } from "../channels/plugins/helpers.js";
 import { listChannelPlugins } from "../channels/plugins/index.js";
 import type { ChannelId } from "../channels/plugins/types.js";
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import { readChannelAllowFromStore } from "../pairing/pairing-store.js";
 import { note } from "../terminal/note.js";
 import { formatCliCommand } from "../cli/command-format.js";
 
-export async function noteSecurityWarnings(cfg: ClawdbotConfig) {
+export async function noteSecurityWarnings(cfg: SendellConfig) {
   const warnings: string[] = [];
-  const auditHint = `- Run: ${formatCliCommand("clawdbot security audit --deep")}`;
+  const auditHint = `- Run: ${formatCliCommand("sendell security audit --deep")}`;
 
   // ===========================================
   // GATEWAY NETWORK EXPOSURE CHECK
@@ -43,18 +43,18 @@ export async function noteSecurityWarnings(cfg: ClawdbotConfig) {
       warnings.push(
         `- CRITICAL: Gateway bound to "${gatewayBind}" with NO authentication.`,
         `  Anyone on your network (or internet if port-forwarded) can fully control your agent.`,
-        `  Fix: ${formatCliCommand("clawdbot config set gateway.bind loopback")}`,
-        `  Or enable auth: ${formatCliCommand("clawdbot config set gateway.auth.mode token")}`,
+        `  Fix: ${formatCliCommand("sendell config set gateway.bind loopback")}`,
+        `  Or enable auth: ${formatCliCommand("sendell config set gateway.auth.mode token")}`,
       );
     } else if (authMode === "token" && !authToken) {
       warnings.push(
         `- CRITICAL: Gateway bound to "${gatewayBind}" with empty auth token.`,
-        `  Fix: ${formatCliCommand("clawdbot doctor --fix")} to generate a token`,
+        `  Fix: ${formatCliCommand("sendell doctor --fix")} to generate a token`,
       );
     } else if (authMode === "password" && !authPassword) {
       warnings.push(
         `- CRITICAL: Gateway bound to "${gatewayBind}" with empty password.`,
-        `  Fix: ${formatCliCommand("clawdbot configure")} to set a password`,
+        `  Fix: ${formatCliCommand("sendell configure")} to set a password`,
       );
     } else {
       // Auth is configured, but still warn about network exposure

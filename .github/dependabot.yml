@@ -64,9 +64,9 @@ updates:
           - patch
     open-pull-requests-limit: 5
 
-  # Swift Package Manager - shared ClawdbotKit
+  # Swift Package Manager - shared SendellKit
   - package-ecosystem: swift
-    directory: /apps/shared/ClawdbotKit
+    directory: /apps/shared/SendellKit
     schedule:
       interval: weekly
     cooldown:

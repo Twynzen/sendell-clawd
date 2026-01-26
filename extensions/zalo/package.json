@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/zalo",
+  "name": "@sendell/zalo",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Zalo channel plugin",
-  "clawdbot": {
+  "description": "Sendell Zalo channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ],
@@ -21,13 +21,13 @@
       "quickstartAllowFrom": true
     },
     "install": {
-      "npmSpec": "@clawdbot/zalo",
+      "npmSpec": "@sendell/zalo",
       "localPath": "extensions/zalo",
       "defaultChoice": "npm"
     }
   },
   "dependencies": {
-    "clawdbot": "workspace:*",
+    "sendell": "workspace:*",
     "undici": "7.19.0"
   }
 }

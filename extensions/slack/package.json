@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/slack",
+  "name": "@sendell/slack",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot Slack channel plugin",
-  "clawdbot": {
+  "description": "Sendell Slack channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

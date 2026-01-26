@@ -12,7 +12,7 @@ const requiredPaths = [
   "dist/hooks/gmail.js",
   "dist/whatsapp/normalize.js",
 ];
-const forbiddenPrefixes = ["dist/Clawdbot.app/"];
+const forbiddenPrefixes = ["dist/Sendell.app/"];
 
 type PackageJson = {
   name?: string;

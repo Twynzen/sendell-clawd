@@ -4,7 +4,7 @@ import path from "node:path";
 import { DEFAULT_CLAWD_BROWSER_COLOR, DEFAULT_CLAWD_BROWSER_PROFILE_NAME } from "./constants.js";
 
 function decoratedMarkerPath(userDataDir: string) {
-  return path.join(userDataDir, ".clawd-profile-decorated");
+  return path.join(userDataDir, ".sendell-profile-decorated");
 }
 
 function safeReadJson(filePath: string): Record<string, unknown> | null {
@@ -115,7 +115,7 @@ export function isProfileDecorated(
 }
 
 /**
- * Best-effort profile decoration (name + lobster-orange). Chrome preference keys
+ * Best-effort profile decoration (name + guide-orange). Chrome preference keys
  * vary by version; we keep this conservative and idempotent.
  */
 export function decorateClawdProfile(

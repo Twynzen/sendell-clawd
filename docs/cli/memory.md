@@ -1,11 +1,11 @@
 ---
-summary: "CLI reference for `clawdbot memory` (status/index/search)"
+summary: "CLI reference for `sendell memory` (status/index/search)"
 read_when:
   - You want to index or search semantic memory
   - You’re debugging memory availability or indexing
 ---
 
-# `clawdbot memory`
+# `sendell memory`
 
 Manage semantic memory indexing and search.
 Provided by the active memory plugin (default: `memory-core`; set `plugins.slots.memory = "none"` to disable).
@@ -17,15 +17,15 @@ Related:
 ## Examples
 
 ```bash
-clawdbot memory status
-clawdbot memory status --deep
-clawdbot memory status --deep --index
-clawdbot memory status --deep --index --verbose
-clawdbot memory index
-clawdbot memory index --verbose
-clawdbot memory search "release checklist"
-clawdbot memory status --agent main
-clawdbot memory index --agent main --verbose
+sendell memory status
+sendell memory status --deep
+sendell memory status --deep --index
+sendell memory status --deep --index --verbose
+sendell memory index
+sendell memory index --verbose
+sendell memory search "release checklist"
+sendell memory status --agent main
+sendell memory index --agent main --verbose
 ```
 
 ## Options

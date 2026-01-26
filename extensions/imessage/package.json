@@ -1,9 +1,9 @@
 {
-  "name": "@clawdbot/imessage",
+  "name": "@sendell/imessage",
   "version": "2026.1.25",
   "type": "module",
-  "description": "Clawdbot iMessage channel plugin",
-  "clawdbot": {
+  "description": "Sendell iMessage channel plugin",
+  "sendell": {
     "extensions": [
       "./index.ts"
     ]

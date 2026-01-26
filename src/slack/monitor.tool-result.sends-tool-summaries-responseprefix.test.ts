@@ -103,7 +103,7 @@ describe("monitorSlackProvider tool results", () => {
           {
             id: "main",
             default: true,
-            identity: { name: "Mainbot", theme: "space lobster", emoji: "🦞" },
+            identity: { name: "Mainbot", theme: "spiritual guide", emoji: "🦞" },
           },
           {
             id: "rich",
@@ -377,7 +377,7 @@ describe("monitorSlackProvider tool results", () => {
       event: {
         type: "message",
         user: "U1",
-        text: "clawd: hello",
+        text: "sendell: hello",
         ts: "123",
         channel: "C1",
         channel_type: "channel",
@@ -422,7 +422,7 @@ describe("monitorSlackProvider tool results", () => {
       event: {
         type: "message",
         user: "U1",
-        text: "clawd: hello <@U2>",
+        text: "sendell: hello <@U2>",
         ts: "123",
         channel: "C1",
         channel_type: "channel",

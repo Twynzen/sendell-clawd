@@ -4,7 +4,7 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import "./test-helpers/fast-core-tools.js";
-import { createClawdbotTools } from "./clawdbot-tools.js";
+import { createSendellTools } from "./sendell-tools.js";
 
 vi.mock("./tools/gateway.js", () => ({
   callGatewayTool: vi.fn(async (method: string) => {
@@ -19,12 +19,12 @@ describe("gateway tool", () => {
   it("schedules SIGUSR1 restart", async () => {
     vi.useFakeTimers();
     const kill = vi.spyOn(process, "kill").mockImplementation(() => true);
-    const previousStateDir = process.env.CLAWDBOT_STATE_DIR;
-    const stateDir = await fs.mkdtemp(path.join(os.tmpdir(), "clawdbot-test-"));
-    process.env.CLAWDBOT_STATE_DIR = stateDir;
+    const previousStateDir = process.env.SENDELL_STATE_DIR;
+    const stateDir = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-test-"));
+    process.env.SENDELL_STATE_DIR = stateDir;
 
     try {
-      const tool = createClawdbotTools({
+      const tool = createSendellTools({
         config: { commands: { restart: true } },
       }).find((candidate) => candidate.name === "gateway");
       expect(tool).toBeDefined();
@@ -47,7 +47,7 @@ describe("gateway tool", () => {
         payload?: { kind?: string; doctorHint?: string | null };
       };
       expect(parsed.payload?.kind).toBe("restart");
-      expect(parsed.payload?.doctorHint).toBe("Run: clawdbot doctor --non-interactive");
+      expect(parsed.payload?.doctorHint).toBe("Run: sendell doctor --non-interactive");
 
       expect(kill).not.toHaveBeenCalled();
       await vi.runAllTimersAsync();
@@ -56,22 +56,22 @@ describe("gateway tool", () => {
       kill.mockRestore();
       vi.useRealTimers();
       if (previousStateDir === undefined) {
-        delete process.env.CLAWDBOT_STATE_DIR;
+        delete process.env.SENDELL_STATE_DIR;
       } else {
-        process.env.CLAWDBOT_STATE_DIR = previousStateDir;
+        process.env.SENDELL_STATE_DIR = previousStateDir;
       }
     }
   });
 
   it("passes config.apply through gateway call", async () => {
     const { callGatewayTool } = await import("./tools/gateway.js");
-    const tool = createClawdbotTools({
+    const tool = createSendellTools({
       agentSessionKey: "agent:main:whatsapp:dm:+15555550123",
     }).find((candidate) => candidate.name === "gateway");
     expect(tool).toBeDefined();
     if (!tool) throw new Error("missing gateway tool");
 
-    const raw = '{\n  agents: { defaults: { workspace: "~/clawd" } }\n}\n';
+    const raw = '{\n  agents: { defaults: { workspace: "~/sendell" } }\n}\n';
     await tool.execute("call2", {
       action: "config.apply",
       raw,
@@ -91,7 +91,7 @@ describe("gateway tool", () => {
 
   it("passes config.patch through gateway call", async () => {
     const { callGatewayTool } = await import("./tools/gateway.js");
-    const tool = createClawdbotTools({
+    const tool = createSendellTools({
       agentSessionKey: "agent:main:whatsapp:dm:+15555550123",
     }).find((candidate) => candidate.name === "gateway");
     expect(tool).toBeDefined();
@@ -117,7 +117,7 @@ describe("gateway tool", () => {
 
   it("passes update.run through gateway call", async () => {
     const { callGatewayTool } = await import("./tools/gateway.js");
-    const tool = createClawdbotTools({
+    const tool = createSendellTools({
       agentSessionKey: "agent:main:whatsapp:dm:+15555550123",
     }).find((candidate) => candidate.name === "gateway");
     expect(tool).toBeDefined();

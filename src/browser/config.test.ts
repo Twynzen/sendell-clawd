@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { resolveBrowserConfig, resolveProfile, shouldStartLocalBrowserServer } from "./config.js";
 
 describe("browser config", () => {
-  it("defaults to enabled with loopback control url and lobster-orange color", () => {
+  it("defaults to enabled with loopback control url and guide-orange color", () => {
     const resolved = resolveBrowserConfig(undefined);
     expect(resolved.enabled).toBe(true);
     expect(resolved.controlPort).toBe(18791);
@@ -15,17 +15,17 @@ describe("browser config", () => {
     expect(profile?.cdpPort).toBe(18792);
     expect(profile?.cdpUrl).toBe("http://127.0.0.1:18792");
 
-    const clawd = resolveProfile(resolved, "clawd");
-    expect(clawd?.driver).toBe("clawd");
-    expect(clawd?.cdpPort).toBe(18800);
-    expect(clawd?.cdpUrl).toBe("http://127.0.0.1:18800");
+    const sendell = resolveProfile(resolved, "sendell");
+    expect(sendell?.driver).toBe("sendell");
+    expect(sendell?.cdpPort).toBe(18800);
+    expect(sendell?.cdpUrl).toBe("http://127.0.0.1:18800");
     expect(resolved.remoteCdpTimeoutMs).toBe(1500);
     expect(resolved.remoteCdpHandshakeTimeoutMs).toBe(3000);
   });
 
-  it("derives default ports from CLAWDBOT_GATEWAY_PORT when unset", () => {
-    const prev = process.env.CLAWDBOT_GATEWAY_PORT;
-    process.env.CLAWDBOT_GATEWAY_PORT = "19001";
+  it("derives default ports from SENDELL_GATEWAY_PORT when unset", () => {
+    const prev = process.env.SENDELL_GATEWAY_PORT;
+    process.env.SENDELL_GATEWAY_PORT = "19001";
     try {
       const resolved = resolveBrowserConfig(undefined);
       expect(resolved.controlPort).toBe(19003);
@@ -34,14 +34,14 @@ describe("browser config", () => {
       expect(chrome?.cdpPort).toBe(19004);
       expect(chrome?.cdpUrl).toBe("http://127.0.0.1:19004");
 
-      const clawd = resolveProfile(resolved, "clawd");
-      expect(clawd?.cdpPort).toBe(19012);
-      expect(clawd?.cdpUrl).toBe("http://127.0.0.1:19012");
+      const sendell = resolveProfile(resolved, "sendell");
+      expect(sendell?.cdpPort).toBe(19012);
+      expect(sendell?.cdpUrl).toBe("http://127.0.0.1:19012");
     } finally {
       if (prev === undefined) {
-        delete process.env.CLAWDBOT_GATEWAY_PORT;
+        delete process.env.SENDELL_GATEWAY_PORT;
       } else {
-        process.env.CLAWDBOT_GATEWAY_PORT = prev;
+        process.env.SENDELL_GATEWAY_PORT = prev;
       }
     }
   });
@@ -93,7 +93,7 @@ describe("browser config", () => {
       controlUrl: "http://127.0.0.1:18791",
       cdpUrl: "http://example.com:9222",
     });
-    const profile = resolveProfile(resolved, "clawd");
+    const profile = resolveProfile(resolved, "sendell");
     expect(profile?.cdpPort).toBe(9222);
     expect(profile?.cdpUrl).toBe("http://example.com:9222");
     expect(profile?.cdpIsLoopback).toBe(false);
@@ -136,10 +136,10 @@ describe("browser config", () => {
     const resolved = resolveBrowserConfig({
       controlUrl: "http://127.0.0.1:18791",
       profiles: {
-        clawd: { cdpPort: 18792, color: "#FF4500" },
+        sendell: { cdpPort: 18792, color: "#FF4500" },
       },
     });
     expect(resolveProfile(resolved, "chrome")).toBe(null);
-    expect(resolved.defaultProfile).toBe("clawd");
+    expect(resolved.defaultProfile).toBe("sendell");
   });
 });

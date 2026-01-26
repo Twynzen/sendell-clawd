@@ -1,5 +1,5 @@
 ---
-summary: "Run multiple Clawdbot Gateways on one host (isolation, ports, and profiles)"
+summary: "Run multiple Sendell Gateways on one host (isolation, ports, and profiles)"
 read_when:
   - Running more than one Gateway on the same machine
   - You need isolated config/state/ports per Gateway
@@ -9,8 +9,8 @@ read_when:
 Most setups should use one Gateway because a single Gateway can handle multiple messaging connections and agents. If you need stronger isolation or redundancy (e.g., a rescue bot), run separate Gateways with isolated profiles/ports.
 
 ## Isolation checklist (required)
-- `CLAWDBOT_CONFIG_PATH` — per-instance config file
-- `CLAWDBOT_STATE_DIR` — per-instance sessions, creds, caches
+- `SENDELL_CONFIG_PATH` — per-instance config file
+- `SENDELL_STATE_DIR` — per-instance sessions, creds, caches
 - `agents.defaults.workspace` — per-instance workspace root
 - `gateway.port` (or `--port`) — unique per instance
 - Derived ports (browser/canvas) must not overlap
@@ -19,22 +19,22 @@ If these are shared, you will hit config races and port conflicts.
 
 ## Recommended: profiles (`--profile`)
 
-Profiles auto-scope `CLAWDBOT_STATE_DIR` + `CLAWDBOT_CONFIG_PATH` and suffix service names.
+Profiles auto-scope `SENDELL_STATE_DIR` + `SENDELL_CONFIG_PATH` and suffix service names.
 
 ```bash
 # main
-clawdbot --profile main setup
-clawdbot --profile main gateway --port 18789
+sendell --profile main setup
+sendell --profile main gateway --port 18789
 
 # rescue
-clawdbot --profile rescue setup
-clawdbot --profile rescue gateway --port 19001
+sendell --profile rescue setup
+sendell --profile rescue gateway --port 19001
 ```
 
 Per-profile services:
 ```bash
-clawdbot --profile main gateway install
-clawdbot --profile rescue gateway install
+sendell --profile main gateway install
+sendell --profile rescue gateway install
 ```
 
 ## Rescue-bot guide
@@ -54,11 +54,11 @@ Port spacing: leave at least 20 ports between base ports so the derived browser/
 ```bash
 # Main bot (existing or fresh, without --profile param)
 # Runs on port 18789 + Chrome CDC/Canvas/... Ports 
-clawdbot onboard
-clawdbot gateway install
+sendell onboard
+sendell gateway install
 
 # Rescue bot (isolated profile + ports)
-clawdbot --profile rescue onboard
+sendell --profile rescue onboard
 # Notes: 
 # - workspace name will be postfixed with -rescue per default
 # - Port should be at least 18789 + 20 Ports, 
@@ -66,12 +66,12 @@ clawdbot --profile rescue onboard
 # - rest of the onboarding is the same as normal
 
 # To install the service (if not happened automatically during onboarding)
-clawdbot --profile rescue gateway install
+sendell --profile rescue gateway install
 ```
 
 ## Port mapping (derived)
 
-Base port = `gateway.port` (or `CLAWDBOT_GATEWAY_PORT` / `--port`).
+Base port = `gateway.port` (or `SENDELL_GATEWAY_PORT` / `--port`).
 
 - `browser.controlUrl port = base + 2`
 - `canvasHost.port = base + 4`
@@ -89,19 +89,19 @@ If you override any of these in config or env, you must keep them unique per ins
 ## Manual env example
 
 ```bash
-CLAWDBOT_CONFIG_PATH=~/.clawdbot/main.json \
-CLAWDBOT_STATE_DIR=~/.clawdbot-main \
-clawdbot gateway --port 18789
+SENDELL_CONFIG_PATH=~/.sendell/main.json \
+SENDELL_STATE_DIR=~/.sendell-main \
+sendell gateway --port 18789
 
-CLAWDBOT_CONFIG_PATH=~/.clawdbot/rescue.json \
-CLAWDBOT_STATE_DIR=~/.clawdbot-rescue \
-clawdbot gateway --port 19001
+SENDELL_CONFIG_PATH=~/.sendell/rescue.json \
+SENDELL_STATE_DIR=~/.sendell-rescue \
+sendell gateway --port 19001
 ```
 
 ## Quick checks
 
 ```bash
-clawdbot --profile main status
-clawdbot --profile rescue status
-clawdbot --profile rescue browser status
+sendell --profile main status
+sendell --profile rescue status
+sendell --profile rescue browser status
 ```

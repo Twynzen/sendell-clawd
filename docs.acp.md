@@ -1,12 +1,12 @@
-# Clawdbot ACP Bridge
+# Sendell ACP Bridge
 
-This document describes how the Clawdbot ACP (Agent Client Protocol) bridge works,
+This document describes how the Sendell ACP (Agent Client Protocol) bridge works,
 how it maps ACP sessions to Gateway sessions, and how IDEs should invoke it.
 
 ## Overview
 
-`clawdbot acp` exposes an ACP agent over stdio and forwards prompts to a running
-Clawdbot Gateway over WebSocket. It keeps ACP session ids mapped to Gateway
+`sendell acp` exposes an ACP agent over stdio and forwards prompts to a running
+Sendell Gateway over WebSocket. It keeps ACP session ids mapped to Gateway
 session keys so IDEs can reconnect to the same agent transcript or reset it on
 request.
 
@@ -20,25 +20,25 @@ Key goals:
 ## How can I use this
 
 Use ACP when an IDE or tooling speaks Agent Client Protocol and you want it to
-drive a Clawdbot Gateway session.
+drive a Sendell Gateway session.
 
 Quick steps:
 
 1. Run a Gateway (local or remote).
 2. Configure the Gateway target (`gateway.remote.url` + auth) or pass flags.
-3. Point the IDE to run `clawdbot acp` over stdio.
+3. Point the IDE to run `sendell acp` over stdio.
 
 Example config:
 
 ```bash
-clawdbot config set gateway.remote.url wss://gateway-host:18789
-clawdbot config set gateway.remote.token <token>
+sendell config set gateway.remote.url wss://gateway-host:18789
+sendell config set gateway.remote.token <token>
 ```
 
 Example run:
 
 ```bash
-clawdbot acp --url wss://gateway-host:18789 --token <token>
+sendell acp --url wss://gateway-host:18789 --token <token>
 ```
 
 ## Selecting agents
@@ -48,9 +48,9 @@ ACP does not pick agents directly. It routes by the Gateway session key.
 Use agent-scoped session keys to target a specific agent:
 
 ```bash
-clawdbot acp --session agent:main:main
-clawdbot acp --session agent:design:main
-clawdbot acp --session agent:qa:bug-123
+sendell acp --session agent:main:main
+sendell acp --session agent:design:main
+sendell acp --session agent:qa:bug-123
 ```
 
 Each ACP session maps to a single Gateway session key. One agent can have many
@@ -64,9 +64,9 @@ Add a custom ACP agent in `~/.config/zed/settings.json`:
 ```json
 {
   "agent_servers": {
-    "Clawdbot ACP": {
+    "Sendell ACP": {
       "type": "custom",
-      "command": "clawdbot",
+      "command": "sendell",
       "args": ["acp"],
       "env": {}
     }
@@ -79,9 +79,9 @@ To target a specific Gateway or agent:
 ```json
 {
   "agent_servers": {
-    "Clawdbot ACP": {
+    "Sendell ACP": {
       "type": "custom",
-      "command": "clawdbot",
+      "command": "sendell",
       "args": [
         "acp",
         "--url", "wss://gateway-host:18789",
@@ -94,11 +94,11 @@ To target a specific Gateway or agent:
 }
 ```
 
-In Zed, open the Agent panel and select “Clawdbot ACP” to start a thread.
+In Zed, open the Agent panel and select “Sendell ACP” to start a thread.
 
 ## Execution Model
 
-- ACP client spawns `clawdbot acp` and speaks ACP messages over stdio.
+- ACP client spawns `sendell acp` and speaks ACP messages over stdio.
 - The bridge connects to the Gateway using existing auth config (or CLI flags).
 - ACP `prompt` translates to Gateway `chat.send`.
 - Gateway streaming events are translated back into ACP streaming events.
@@ -115,9 +115,9 @@ You can override or reuse sessions in two ways:
 1) CLI defaults
 
 ```bash
-clawdbot acp --session agent:main:main
-clawdbot acp --session-label "support inbox"
-clawdbot acp --reset-session
+sendell acp --session agent:main:main
+sendell acp --session-label "support inbox"
+sendell acp --reset-session
 ```
 
 2) ACP metadata per session
@@ -164,7 +164,7 @@ updates. Terminal Gateway states map to ACP `done` with stop reasons:
 
 ## Auth + Gateway Discovery
 
-`clawdbot acp` resolves the Gateway URL and auth from CLI flags or config:
+`sendell acp` resolves the Gateway URL and auth from CLI flags or config:
 
 - `--url` / `--token` / `--password` take precedence.
 - Otherwise use configured `gateway.remote.*` settings.

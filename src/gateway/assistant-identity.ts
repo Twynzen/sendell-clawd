@@ -1,7 +1,7 @@
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
 import { resolveAgentIdentity } from "../agents/identity.js";
 import { loadAgentIdentity } from "../commands/agents.config.js";
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import { normalizeAgentId } from "../routing/session-key.js";
 
 const MAX_ASSISTANT_NAME = 50;
@@ -9,8 +9,8 @@ const MAX_ASSISTANT_AVATAR = 200;
 
 export const DEFAULT_ASSISTANT_IDENTITY: AssistantIdentity = {
   agentId: "main",
-  name: "Assistant",
-  avatar: "A",
+  name: "Sendell",
+  avatar: "👻",
 };
 
 export type AssistantIdentity = {
@@ -47,7 +47,7 @@ function normalizeAvatarValue(value: string | undefined): string | undefined {
 }
 
 export function resolveAssistantIdentity(params: {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   agentId?: string | null;
   workspaceDir?: string | null;
 }): AssistantIdentity {

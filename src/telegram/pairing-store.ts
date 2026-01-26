@@ -1,4 +1,4 @@
-import type { ClawdbotConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import {
   addChannelAllowFromStoreEntry,
   approveChannelPairingCode,
@@ -95,7 +95,7 @@ export async function approveTelegramPairingCode(params: {
 }
 
 export async function resolveTelegramEffectiveAllowFrom(params: {
-  cfg: ClawdbotConfig;
+  cfg: SendellConfig;
   env?: NodeJS.ProcessEnv;
 }): Promise<{ dm: string[]; group: string[] }> {
   const env = params.env ?? process.env;
