@@ -230,7 +230,6 @@ export async function runOnboardingWizard(
       return "Auto";
     };
     const formatAuth = (value: GatewayAuthChoice) => {
-      if (value === "off") return "Off (loopback only)";
       if (value === "token") return "Token (default)";
       return "Password";
     };
