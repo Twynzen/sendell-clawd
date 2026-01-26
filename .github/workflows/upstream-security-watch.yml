@@ -1,0 +1,168 @@
+name: Upstream Security Watch
+
+on:
+  schedule:
+    # Every 3 days at 10:00 UTC
+    - cron: "0 10 */3 * *"
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  issues: write
+
+jobs:
+  check-upstream-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/clawdbot/clawdbot.git || true
+          git fetch upstream main --quiet
+
+      - name: Find last checked commit
+        id: last-check
+        run: |
+          # Read the last checked commit SHA, or use our fork point
+          MARKER_FILE=".github/.upstream-security-cursor"
+          if [ -f "$MARKER_FILE" ]; then
+            LAST_SHA=$(cat "$MARKER_FILE" | tr -d '[:space:]')
+          else
+            # First run: use the merge-base (fork point)
+            LAST_SHA=$(git merge-base HEAD upstream/main 2>/dev/null || git log --oneline -1 --format="%H" HEAD)
+          fi
+          echo "sha=$LAST_SHA" >> "$GITHUB_OUTPUT"
+          echo "Last checked: $LAST_SHA"
+
+      - name: Scan for security commits
+        id: scan
+        run: |
+          LAST_SHA="${{ steps.last-check.outputs.sha }}"
+          LATEST_SHA=$(git rev-parse upstream/main)
+
+          if [ "$LAST_SHA" = "$LATEST_SHA" ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No new commits since last check."
+            exit 0
+          fi
+
+          # Patterns that indicate security-related changes
+          SECURITY_COMMITS=$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="secur" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="harden" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="vulnerab" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="CVE-" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="injection" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="XSS" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="auth" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="CSRF" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="sanitiz" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="dns.pin" -i 2>/dev/null || true)
+          SECURITY_COMMITS+=$'\n'$(git log "$LAST_SHA".."$LATEST_SHA" --oneline --grep="prompt.inject" -i 2>/dev/null || true)
+
+          # Deduplicate and clean
+          UNIQUE_COMMITS=$(echo "$SECURITY_COMMITS" | grep -v '^$' | sort -u)
+
+          if [ -z "$UNIQUE_COMMITS" ]; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No security commits found in $LAST_SHA..$LATEST_SHA"
+          else
+            COUNT=$(echo "$UNIQUE_COMMITS" | wc -l)
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+            # Save commits to file for the issue body
+            echo "$UNIQUE_COMMITS" > /tmp/security-commits.txt
+            echo "Found $COUNT security-related commits"
+          fi
+
+          # Also get total commit count for context
+          TOTAL=$(git log "$LAST_SHA".."$LATEST_SHA" --oneline | wc -l)
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "latest=$LATEST_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Build diff summary
+        if: steps.scan.outputs.found == 'true'
+        id: diff
+        run: |
+          LAST_SHA="${{ steps.last-check.outputs.sha }}"
+          LATEST_SHA="${{ steps.scan.outputs.latest }}"
+
+          # Get changed files in security commits
+          SECURITY_FILES=""
+          while IFS= read -r line; do
+            SHA=$(echo "$line" | cut -d' ' -f1)
+            FILES=$(git diff-tree --no-commit-id --name-only -r "$SHA" 2>/dev/null | head -10)
+            if [ -n "$FILES" ]; then
+              SECURITY_FILES+="### $(echo "$line" | cut -d' ' -f2-)"$'\n'
+              SECURITY_FILES+='```'$'\n'"$FILES"$'\n''```'$'\n\n'
+            fi
+          done < /tmp/security-commits.txt
+
+          echo "$SECURITY_FILES" > /tmp/security-files.txt
+
+      - name: Create GitHub Issue
+        if: steps.scan.outputs.found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const commits = fs.readFileSync('/tmp/security-commits.txt', 'utf8').trim();
+            const files = fs.readFileSync('/tmp/security-files.txt', 'utf8').trim();
+            const count = '${{ steps.scan.outputs.count }}';
+            const total = '${{ steps.scan.outputs.total }}';
+            const latest = '${{ steps.scan.outputs.latest }}';
+
+            const body = `## Upstream Security Update Detected
+
+            **${count} security-related commits** found out of ${total} total new commits in upstream/main.
+
+            ### Security Commits
+
+            \`\`\`
+            ${commits}
+            \`\`\`
+
+            ### Files Changed
+
+            ${files}
+
+            ### Action Required
+
+            1. Review each commit on the [upstream repo](https://github.com/clawdbot/clawdbot)
+            2. Decide which fixes apply to Sendell
+            3. Cherry-pick or manually port the relevant changes
+            4. Close this issue when handled
+
+            ### How to cherry-pick
+
+            \`\`\`bash
+            git fetch upstream main
+            git cherry-pick <commit-sha>
+            # Resolve any conflicts (ClawdbotConfig -> SendellConfig, etc.)
+            \`\`\`
+
+            ---
+            *Upstream cursor: \`${latest.substring(0, 10)}\`*
+            *Auto-generated by upstream-security-watch workflow*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Security] ${count} upstream security update(s) detected`,
+              body: body,
+              labels: ['security', 'upstream']
+            });
+
+      - name: Update cursor
+        if: steps.scan.outputs.latest
+        run: |
+          LATEST="${{ steps.scan.outputs.latest }}"
+          mkdir -p .github
+          echo "$LATEST" > .github/.upstream-security-cursor
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/.upstream-security-cursor
+          git diff --cached --quiet || git commit -m "chore: update upstream security cursor to ${LATEST:0:10}"
+          git push || echo "Push failed - cursor not updated"
