@@ -155,7 +155,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.sendell.bot/cli/age
         `
 ${theme.heading("Examples:")}
 ${formatHelpExamples([
-  ['sendell agents set-identity --agent main --name "Sendell" --emoji "🦞"', "Set name + emoji."],
+  ['sendell agents set-identity --agent main --name "Sendell" --emoji "👻"', "Set name + emoji."],
   ["sendell agents set-identity --agent main --avatar avatars/sendell.png", "Set avatar path."],
   ["sendell agents set-identity --workspace ~/sendell --from-identity", "Load from IDENTITY.md."],
   [

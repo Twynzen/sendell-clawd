@@ -69,7 +69,7 @@ export function printWizardHeader(runtime: RuntimeEnv) {
     "█░░░░░█░░░░░█████░█░█░█░█░░█░████░░█░░░█░░█░",
     "█░░░░░█░░░░░█░░░█░█░█░█░█░░█░█░░█░░█░░░█░░█░",
     "░████░█████░█░░░█░░█░█░░███░░████░░░███░░░█░",
-    "              🦞 FRESH DAILY 🦞",
+    "           👻 NAVIGATE EXISTENCE 👻",
   ].join("\n");
   runtime.log(header);
 }
