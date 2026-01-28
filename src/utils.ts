@@ -217,7 +217,7 @@ export function resolveConfigDir(
 ): string {
   const override = env.CLAWDBOT_STATE_DIR?.trim();
   if (override) return resolveUserPath(override);
-  return path.join(homedir(), ".clawdbot");
+  return path.join(homedir(), ".sendell");
 }
 
 export function resolveHomeDir(): string | undefined {

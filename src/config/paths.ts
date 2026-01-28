@@ -26,7 +26,7 @@ export function resolveStateDir(
 ): string {
   const override = env.CLAWDBOT_STATE_DIR?.trim();
   if (override) return resolveUserPath(override);
-  return path.join(homedir(), ".clawdbot");
+  return path.join(homedir(), ".sendell");
 }
 
 function resolveUserPath(input: string): string {
@@ -52,7 +52,7 @@ export function resolveConfigPath(
 ): string {
   const override = env.CLAWDBOT_CONFIG_PATH?.trim();
   if (override) return resolveUserPath(override);
-  return path.join(stateDir, "clawdbot.json");
+  return path.join(stateDir, "sendell.json");
 }
 
 export const CONFIG_PATH_CLAWDBOT = resolveConfigPath();

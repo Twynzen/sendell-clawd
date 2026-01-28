@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { PluginConfigUiHint, PluginKind } from "./types.js";
 
-export const PLUGIN_MANIFEST_FILENAME = "clawdbot.plugin.json";
+export const PLUGIN_MANIFEST_FILENAME = "sendell.plugin.json";
 
 export type PluginManifest = {
   id: string;
