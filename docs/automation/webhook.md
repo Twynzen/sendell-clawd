@@ -27,10 +27,10 @@ Notes:
 
 ## Auth
 
-Every request must include the hook token:
-- `Authorization: Bearer <token>`
-- or `x-sendell-token: <token>`
-- or `?token=<token>`
+Every request must include the hook token. Prefer headers:
+- `Authorization: Bearer <token>` (recommended)
+- `x-sendell-token: <token>`
+- `?token=<token>` (deprecated; logs a warning and will be removed in a future major release)
 
 ## Endpoints
 

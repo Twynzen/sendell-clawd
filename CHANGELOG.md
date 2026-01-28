@@ -6,6 +6,7 @@ Docs: https://docs.clawd.bot
 Status: unreleased.
 
 ### Changes
+- Gateway: warn on hook tokens via query params; document header auth preference. (#2200) Thanks @YuriNachos.
 - Doctor: warn on gateway exposure without auth. (#2016) Thanks @Alex-Alaniz.
 - Docs: add Vercel AI Gateway to providers sidebar. (#1901) Thanks @jerilynzheng.
 - Agents: expand cron tool description with full schema docs. (#1988) Thanks @tomascupr.
@@ -26,6 +27,7 @@ Status: unreleased.
 - Update: ignore dist/control-ui for dirty checks and restore after ui builds. (#1976) Thanks @Glucksberg.
 - Telegram: allow caption param for media sends. (#1888) Thanks @mguellsegarra.
 - Telegram: avoid block replies when streaming is disabled. (#1885) Thanks @ivancasco.
+- Security: use Windows ACLs for permission audits and fixes on Windows. (#1957)
 - Auth: show copyable Google auth URL after ASCII prompt. (#1787) Thanks @robbyczgw-cla.
 - Routing: precompile session key regexes. (#1697) Thanks @Ray0907.
 - TUI: avoid width overflow when rendering selection lists. (#1686) Thanks @mossein.
@@ -41,6 +43,7 @@ Status: unreleased.
 - Web UI: improve WebChat image paste previews and allow image-only sends. (#1925) Thanks @smartprogrammer93.
 - Security: wrap external hook content by default with a per-hook opt-out. (#1827) Thanks @mertcicekci0.
 - Gateway: default auth now fail-closed (token/password required; Tailscale Serve identity remains allowed).
+- Onboarding: remove unsupported gateway auth "off" choice from onboarding/configure flows and CLI flags.
 
 ## 2026.1.24-3
 
