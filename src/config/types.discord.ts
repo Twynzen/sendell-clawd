@@ -67,6 +67,7 @@ export type DiscordActionConfig = {
   voiceStatus?: boolean;
   events?: boolean;
   moderation?: boolean;
+  webhooks?: boolean;
   emojiUploads?: boolean;
   stickerUploads?: boolean;
   channels?: boolean;

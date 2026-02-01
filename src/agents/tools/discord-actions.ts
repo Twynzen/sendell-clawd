@@ -23,6 +23,7 @@ const messagingActions = new Set([
   "unpinMessage",
   "listPins",
   "searchMessages",
+  "webhookSend",
 ]);
 
 const guildActions = new Set([

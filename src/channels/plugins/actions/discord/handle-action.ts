@@ -214,6 +214,27 @@ export async function handleDiscordMessageAction(
     );
   }
 
+  if (action === "webhook-send") {
+    const to = readStringParam(params, "to", { required: true });
+    const content = readStringParam(params, "message", {
+      required: true,
+      allowEmpty: true,
+    });
+    const username = readStringParam(params, "username");
+    const avatarUrl = readStringParam(params, "avatarUrl");
+    return await handleDiscordAction(
+      {
+        action: "webhookSend",
+        accountId: accountId ?? undefined,
+        to,
+        content,
+        username,
+        avatarUrl,
+      },
+      cfg,
+    );
+  }
+
   const adminResult = await tryHandleDiscordMessageActionGuildAdmin({
     ctx,
     resolveChannelId,

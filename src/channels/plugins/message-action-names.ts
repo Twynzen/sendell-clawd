@@ -47,6 +47,7 @@ export const CHANNEL_MESSAGE_ACTION_NAMES = [
   "timeout",
   "kick",
   "ban",
+  "webhook-send",
 ] as const;
 
 export type ChannelMessageActionName = (typeof CHANNEL_MESSAGE_ACTION_NAMES)[number];

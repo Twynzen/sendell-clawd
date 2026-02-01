@@ -239,6 +239,7 @@ export const DiscordAccountSchema = z
         voiceStatus: z.boolean().optional(),
         events: z.boolean().optional(),
         moderation: z.boolean().optional(),
+        webhooks: z.boolean().optional(),
         channels: z.boolean().optional(),
       })
       .strict()

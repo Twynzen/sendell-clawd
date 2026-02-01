@@ -38,6 +38,7 @@ export {
   unpinMessageDiscord,
 } from "./send.messages.js";
 export { sendMessageDiscord, sendPollDiscord, sendStickerDiscord } from "./send.outbound.js";
+export { sendWebhookMessageDiscord } from "./send.webhooks.js";
 export {
   fetchChannelPermissionsDiscord,
   fetchReactionsDiscord,

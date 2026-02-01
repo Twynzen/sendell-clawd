@@ -66,6 +66,7 @@ export const discordMessageActions: ChannelMessageActionAdapter = {
       actions.add("kick");
       actions.add("ban");
     }
+    if (gate("webhooks")) actions.add("webhook-send");
     return Array.from(actions);
   },
   extractToolSend: ({ args }) => {

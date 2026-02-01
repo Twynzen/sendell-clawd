@@ -8,6 +8,8 @@ export const discordOutbound: ChannelOutboundAdapter = {
   pollMaxOptions: 10,
   sendText: async ({ to, text, accountId, deps, replyToId }) => {
     const send = deps?.sendDiscord ?? sendMessageDiscord;
+    // Normalize literal \n sequences the model may emit
+    text = text.replaceAll("\\n", "\n");
     const result = await send(to, text, {
       verbose: false,
       replyTo: replyToId ?? undefined,
@@ -17,6 +19,7 @@ export const discordOutbound: ChannelOutboundAdapter = {
   },
   sendMedia: async ({ to, text, mediaUrl, accountId, deps, replyToId }) => {
     const send = deps?.sendDiscord ?? sendMessageDiscord;
+    if (text) text = text.replaceAll("\\n", "\n");
     const result = await send(to, text, {
       verbose: false,
       mediaUrl,

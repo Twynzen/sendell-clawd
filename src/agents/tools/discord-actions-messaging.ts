@@ -4,6 +4,7 @@ import {
   createThreadDiscord,
   deleteMessageDiscord,
   editMessageDiscord,
+  sendWebhookMessageDiscord,
   fetchChannelPermissionsDiscord,
   fetchMessageDiscord,
   fetchReactionsDiscord,
@@ -384,6 +385,22 @@ export async function handleDiscordMessagingAction(
         ? await listPinsDiscord(channelId, { accountId })
         : await listPinsDiscord(channelId);
       return jsonResult({ ok: true, pins: pins.map((pin) => normalizeMessage(pin)) });
+    }
+    case "webhookSend": {
+      if (!isActionEnabled("webhooks")) {
+        throw new Error("Discord webhook sends are disabled.");
+      }
+      const to = readStringParam(params, "to", { required: true });
+      const channelId = resolveDiscordChannelId(to);
+      const content = readStringParam(params, "content", { required: true });
+      const username = readStringParam(params, "username");
+      const avatarUrl = readStringParam(params, "avatarUrl");
+      const result = await sendWebhookMessageDiscord(channelId, content, {
+        ...(accountId ? { accountId } : {}),
+        username: username ?? undefined,
+        avatarUrl: avatarUrl ?? undefined,
+      });
+      return jsonResult({ ok: true, result });
     }
     case "searchMessages": {
       if (!isActionEnabled("search")) {
