@@ -1,5 +1,10 @@
 import type { Api, Model } from "@mariozechner/pi-ai";
-import { discoverAuthStorage, discoverModels } from "@mariozechner/pi-coding-agent";
+import {
+  discoverAuthStorage,
+  discoverModels,
+  type AuthStorage,
+  type ModelRegistry,
+} from "../pi-model-discovery.js";
 
 import type { SendellConfig } from "../../config/config.js";
 import type { ModelDefinitionConfig } from "../../config/types.js";
@@ -43,8 +48,8 @@ export function resolveModel(
 ): {
   model?: Model<Api>;
   error?: string;
-  authStorage: ReturnType<typeof discoverAuthStorage>;
-  modelRegistry: ReturnType<typeof discoverModels>;
+  authStorage: AuthStorage;
+  modelRegistry: ModelRegistry;
 } {
   const resolvedAgentDir = agentDir ?? resolveSendellAgentDir();
   const authStorage = discoverAuthStorage(resolvedAgentDir);

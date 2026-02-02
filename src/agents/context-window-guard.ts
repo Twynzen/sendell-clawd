@@ -23,9 +23,6 @@ export function resolveContextWindowInfo(params: {
   modelContextWindow?: number;
   defaultTokens: number;
 }): ContextWindowInfo {
-  const fromModel = normalizePositiveInt(params.modelContextWindow);
-  if (fromModel) return { tokens: fromModel, source: "model" };
-
   const fromModelsConfig = (() => {
     const providers = params.cfg?.models?.providers as
       | Record<string, { models?: Array<{ id?: string; contextWindow?: number }> }>
@@ -35,12 +32,22 @@ export function resolveContextWindowInfo(params: {
     const match = models.find((m) => m?.id === params.modelId);
     return normalizePositiveInt(match?.contextWindow);
   })();
-  if (fromModelsConfig) return { tokens: fromModelsConfig, source: "modelsConfig" };
+  const fromModel = normalizePositiveInt(params.modelContextWindow);
+  const baseInfo = fromModelsConfig
+    ? { tokens: fromModelsConfig, source: "modelsConfig" as const }
+    : fromModel
+      ? { tokens: fromModel, source: "model" as const }
+      : { tokens: Math.floor(params.defaultTokens), source: "default" as const };
 
-  const fromAgentConfig = normalizePositiveInt(params.cfg?.agents?.defaults?.contextTokens);
-  if (fromAgentConfig) return { tokens: fromAgentConfig, source: "agentContextTokens" };
+  // Apply agents.defaults.contextTokens as a cap: only takes effect when
+  // it is LOWER than the model/config context window.  This lets operators
+  // force earlier compaction to save costs without touching model config.
+  const capTokens = normalizePositiveInt(params.cfg?.agents?.defaults?.contextTokens);
+  if (capTokens && capTokens < baseInfo.tokens) {
+    return { tokens: capTokens, source: "agentContextTokens" };
+  }
 
-  return { tokens: Math.floor(params.defaultTokens), source: "default" };
+  return baseInfo;
 }
 
 export type ContextWindowGuardResult = ContextWindowInfo & {

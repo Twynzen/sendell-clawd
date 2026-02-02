@@ -40,6 +40,7 @@ import { formatForLog } from "../ws-log.js";
 import { resolveAssistantIdentity } from "../assistant-identity.js";
 import { resolveAssistantAvatarUrl } from "../control-ui-shared.js";
 import { waitForAgentJob } from "./agent-job.js";
+import { injectTimestamp, timestampOptsFromConfig } from "./agent-timestamp.js";
 import type { GatewayRequestHandlers } from "./types.js";
 
 export const agentHandlers: GatewayRequestHandlers = {
@@ -138,6 +139,12 @@ export const agentHandlers: GatewayRequestHandlers = {
         return;
       }
     }
+
+    // Inject timestamp into messages that don't already have one.
+    // Channel messages (Discord, Telegram, etc.) get timestamps via envelope
+    // formatting in a separate code path — they never reach this handler.
+    message = injectTimestamp(message, timestampOptsFromConfig(cfg));
+
     const isKnownGatewayChannel = (value: string): boolean => isGatewayMessageChannel(value);
     const channelHints = [request.channel, request.replyChannel]
       .filter((value): value is string => typeof value === "string")

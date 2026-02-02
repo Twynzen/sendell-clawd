@@ -73,7 +73,11 @@ import {
 import { buildEmbeddedSandboxInfo } from "../sandbox-info.js";
 import { prewarmSessionFile, trackSessionManagerAccess } from "../session-manager-cache.js";
 import { prepareSessionManagerForRun } from "../session-manager-init.js";
-import { buildEmbeddedSystemPrompt, createSystemPromptOverride } from "../system-prompt.js";
+import {
+  applySystemPromptOverrideToSession,
+  buildEmbeddedSystemPrompt,
+  createSystemPromptOverride,
+} from "../system-prompt.js";
 import { splitSdkTools } from "../tool-split.js";
 import { toClientToolDefinitions } from "../../pi-tool-definition-adapter.js";
 import { buildSystemPromptParams } from "../../system-prompt-params.js";
@@ -378,7 +382,7 @@ export async function runEmbeddedAttempt(
       skillsPrompt,
       tools,
     });
-    const systemPrompt = createSystemPromptOverride(appendPrompt);
+    const systemPromptOverride = createSystemPromptOverride(appendPrompt);
 
     const sessionLock = await acquireSessionWriteLock({
       sessionFile: params.sessionFile,
@@ -443,25 +447,27 @@ export async function runEmbeddedAttempt(
 
       const allCustomTools = [...customTools, ...clientToolDefs];
 
-      ({ session } = await createAgentSession({
+      // additionalExtensionPaths is accepted at runtime but not declared in
+      // the published pi-coding-agent types.  Build via variable to avoid
+      // excess-property-check on the object literal.
+      const sessionOpts = {
         cwd: resolvedWorkspace,
         agentDir,
         authStorage: params.authStorage,
         modelRegistry: params.modelRegistry,
         model: params.model,
         thinkingLevel: mapThinkingLevel(params.thinkLevel),
-        systemPrompt,
         tools: builtInTools,
         customTools: allCustomTools,
+        additionalExtensionPaths,
         sessionManager,
         settingsManager,
-        skills: [],
-        contextFiles: [],
-        additionalExtensionPaths,
-      }));
+      };
+      ({ session } = await createAgentSession(sessionOpts as Parameters<typeof createAgentSession>[0]));
       if (!session) {
         throw new Error("Embedded agent session missing");
       }
+      applySystemPromptOverrideToSession(session, systemPromptOverride);
       const activeSession = session;
       const cacheTrace = createCacheTrace({
         cfg: params.config,
@@ -499,7 +505,7 @@ export async function runEmbeddedAttempt(
       if (cacheTrace) {
         cacheTrace.recordStage("session:loaded", {
           messages: activeSession.messages,
-          system: systemPrompt,
+          system: systemPromptOverride(),
           note: "after session create",
         });
         activeSession.agent.streamFn = cacheTrace.wrapStreamFn(activeSession.agent.streamFn);

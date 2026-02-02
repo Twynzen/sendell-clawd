@@ -41,6 +41,7 @@ import {
 } from "../session-utils.js";
 import { stripEnvelopeFromMessages } from "../chat-sanitize.js";
 import { formatForLog } from "../ws-log.js";
+import { injectTimestamp, timestampOptsFromConfig } from "./agent-timestamp.js";
 import type { GatewayRequestContext, GatewayRequestHandlers } from "./types.js";
 
 type TranscriptAppendResult = {
@@ -443,9 +444,13 @@ export const chatHandlers: GatewayRequestHandlers = {
       );
       const commandBody = injectThinking ? `/think ${p.thinking} ${parsedMessage}` : parsedMessage;
       const clientInfo = client?.connect?.client;
+      // Inject timestamp so agents know the current date/time.
+      // Only BodyForAgent gets the timestamp — Body stays raw for UI display.
+      const stampedMessage = injectTimestamp(parsedMessage, timestampOptsFromConfig(cfg));
+
       const ctx: MsgContext = {
         Body: parsedMessage,
-        BodyForAgent: parsedMessage,
+        BodyForAgent: stampedMessage,
         BodyForCommands: commandBody,
         RawBody: parsedMessage,
         CommandBody: commandBody,

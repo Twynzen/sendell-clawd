@@ -63,7 +63,11 @@ import { log } from "./logger.js";
 import { buildModelAliasLines, resolveModel } from "./model.js";
 import { buildEmbeddedSandboxInfo } from "./sandbox-info.js";
 import { prewarmSessionFile, trackSessionManagerAccess } from "./session-manager-cache.js";
-import { buildEmbeddedSystemPrompt, createSystemPromptOverride } from "./system-prompt.js";
+import {
+  applySystemPromptOverrideToSession,
+  buildEmbeddedSystemPrompt,
+  createSystemPromptOverride,
+} from "./system-prompt.js";
 import { splitSdkTools } from "./tool-split.js";
 import type { EmbeddedPiCompactResult } from "./types.js";
 import { formatUserTime, resolveUserTimeFormat, resolveUserTimezone } from "../date-time.js";
@@ -347,7 +351,7 @@ export async function compactEmbeddedPiSessionDirect(
       userTimeFormat,
       contextFiles,
     });
-    const systemPrompt = createSystemPromptOverride(appendPrompt);
+    const systemPromptOverride = createSystemPromptOverride(appendPrompt);
 
     const sessionLock = await acquireSessionWriteLock({
       sessionFile: params.sessionFile,
@@ -383,23 +387,24 @@ export async function compactEmbeddedPiSessionDirect(
         sandboxEnabled: !!sandbox?.enabled,
       });
 
-      let session: Awaited<ReturnType<typeof createAgentSession>>["session"];
-      ({ session } = await createAgentSession({
+      // additionalExtensionPaths is accepted at runtime but not declared in
+      // the published pi-coding-agent types.  Build via variable to avoid
+      // excess-property-check on the object literal.
+      const sessionOpts = {
         cwd: resolvedWorkspace,
         agentDir,
         authStorage,
         modelRegistry,
         model,
         thinkingLevel: mapThinkingLevel(params.thinkLevel),
-        systemPrompt,
         tools: builtInTools,
         customTools,
+        additionalExtensionPaths,
         sessionManager,
         settingsManager,
-        skills: [],
-        contextFiles: [],
-        additionalExtensionPaths,
-      }));
+      };
+      const { session } = await createAgentSession(sessionOpts as Parameters<typeof createAgentSession>[0]);
+      applySystemPromptOverrideToSession(session, systemPromptOverride);
 
       try {
         const prior = await sanitizeSessionHistory({
