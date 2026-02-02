@@ -11,6 +11,7 @@ import {
   isToolResultError,
   sanitizeToolResult,
 } from "./pi-embedded-subscribe.tools.js";
+import { getGlobalHookRunner } from "../plugins/hook-runner-global.js";
 import { inferToolMetaFromArgs } from "./pi-embedded-utils.js";
 import { normalizeToolName } from "./tool-policy.js";
 
@@ -41,6 +42,34 @@ export async function handleToolExecutionStart(
   const toolName = normalizeToolName(rawToolName);
   const toolCallId = String(evt.toolCallId);
   const args = evt.args;
+
+  // Run before_tool_call plugin hook (notification + audit).
+  const hookRunner = getGlobalHookRunner();
+  if (hookRunner?.hasHooks("before_tool_call")) {
+    try {
+      const hookResult = await hookRunner.runBeforeToolCall(
+        {
+          toolName,
+          params:
+            args && typeof args === "object"
+              ? (args as Record<string, unknown>)
+              : {},
+        },
+        {
+          agentId: ctx.params.agentId,
+          sessionKey: ctx.params.sessionKey,
+          toolName,
+        },
+      );
+      if (hookResult?.block) {
+        ctx.log.warn(
+          `before_tool_call: blocked ${toolName} — ${hookResult.blockReason || "no reason"}`,
+        );
+      }
+    } catch (hookErr) {
+      ctx.log.warn(`before_tool_call hook error: ${String(hookErr)}`);
+    }
+  }
 
   if (toolName === "read") {
     const record = args && typeof args === "object" ? (args as Record<string, unknown>) : {};

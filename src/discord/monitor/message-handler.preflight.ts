@@ -259,6 +259,23 @@ export async function preflightDiscordMessage(
     threadParentName = parentInfo.name;
     threadParentType = parentInfo.type;
   }
+
+  // If we're in a thread and the original route was "default",
+  // re-resolve using the parent channel ID to inherit its binding.
+  let resolvedRoute = route;
+  if (threadChannel && threadParentId && route.matchedBy === "default") {
+    const parentRoute = resolveAgentRoute({
+      cfg: params.cfg,
+      channel: "discord",
+      accountId: params.accountId,
+      guildId: params.data.guild_id ?? undefined,
+      peer: { kind: "channel", id: threadParentId },
+    });
+    if (parentRoute.matchedBy !== "default") {
+      resolvedRoute = parentRoute;
+    }
+  }
+
   const threadName = threadChannel?.name;
   const configChannelName = threadParentName ?? channelName;
   const configChannelSlug = configChannelName ? normalizeDiscordSlug(configChannelName) : "";
@@ -271,7 +288,7 @@ export async function preflightDiscordMessage(
   const threadChannelSlug = channelName ? normalizeDiscordSlug(channelName) : "";
   const threadParentSlug = threadParentName ? normalizeDiscordSlug(threadParentName) : "";
 
-  const baseSessionKey = route.sessionKey;
+  const baseSessionKey = resolvedRoute.sessionKey;
   const channelConfig = isGuildMessage
     ? resolveDiscordChannelConfigWithFallback({
         guildInfo,
@@ -467,7 +484,7 @@ export async function preflightDiscordMessage(
   const systemText = resolveDiscordSystemEvent(message, systemLocation);
   if (systemText) {
     enqueueSystemEvent(systemText, {
-      sessionKey: route.sessionKey,
+      sessionKey: resolvedRoute.sessionKey,
       contextKey: `discord:system:${message.channelId}:${message.id}`,
     });
     return null;
@@ -505,7 +522,7 @@ export async function preflightDiscordMessage(
     baseText,
     messageText,
     wasMentioned,
-    route,
+    route: resolvedRoute,
     guildInfo,
     guildSlug,
     threadChannel,

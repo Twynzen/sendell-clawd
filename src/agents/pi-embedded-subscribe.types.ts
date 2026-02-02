@@ -8,6 +8,10 @@ export type ToolResultFormat = "markdown" | "plain";
 export type SubscribeEmbeddedPiSessionParams = {
   session: AgentSession;
   runId: string;
+  /** Agent ID for plugin hook context (optional). */
+  agentId?: string;
+  /** Session key for plugin hook context (optional). */
+  sessionKey?: string;
   verboseLevel?: VerboseLevel;
   reasoningMode?: ReasoningLevel;
   toolResultFormat?: ToolResultFormat;
