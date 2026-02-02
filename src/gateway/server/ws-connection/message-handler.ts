@@ -343,32 +343,6 @@ export function attachGatewayWsMessageHandler(params: {
         const isControlUi = connectParams.client.id === GATEWAY_CLIENT_IDS.CONTROL_UI;
         const allowInsecureControlUi =
           isControlUi && configSnapshot.gateway?.controlUi?.allowInsecureAuth === true;
-        if (hasUntrustedProxyHeaders && resolvedAuth.mode === "none") {
-          setHandshakeState("failed");
-          setCloseCause("proxy-auth-required", {
-            client: connectParams.client.id,
-            clientDisplayName: connectParams.client.displayName,
-            mode: connectParams.client.mode,
-            version: connectParams.client.version,
-          });
-          send({
-            type: "res",
-            id: frame.id,
-            ok: false,
-            error: errorShape(
-              ErrorCodes.INVALID_REQUEST,
-              "gateway auth required behind reverse proxy",
-              {
-                details: {
-                  hint: "set gateway.auth or configure gateway.trustedProxies",
-                },
-              },
-            ),
-          });
-          close(1008, "gateway auth required");
-          return;
-        }
-
         if (!device) {
           const canSkipDevice = allowInsecureControlUi ? hasSharedAuth : hasTokenAuth;
 
@@ -566,7 +540,8 @@ export function attachGatewayWsMessageHandler(params: {
           trustedProxies,
         });
         let authOk = authResult.ok;
-        let authMethod = authResult.method ?? "none";
+        let authMethod =
+          authResult.method ?? (resolvedAuth.mode === "password" ? "password" : "token");
         if (!authOk && connectParams.auth?.token && device) {
           const tokenCheck = await verifyDeviceToken({
             deviceId: device.id,
