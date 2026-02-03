@@ -1,3 +1,5 @@
+import { fetchChannelInfoDiscord } from "./send.guild.js";
+import { isThreadChannelType } from "./send.permissions.js";
 import { createDiscordClient } from "./send.shared.js";
 import type { DiscordReactOpts } from "./send.types.js";
 
@@ -80,14 +82,50 @@ export async function sendWebhookMessageDiscord(
   // Normalize literal \n sequences the model may emit
   content = content.replaceAll("\\n", "\n");
 
-  const webhook = await getOrCreateWebhook(channelId, opts);
-  const url = `https://discord.com/api/v10/webhooks/${webhook.id}/${webhook.token}`;
+  // Detect if channelId is a thread/forum post — webhooks must be created
+  // on the parent channel, then executed with ?thread_id= query parameter.
+  let webhookChannelId = channelId;
+  let threadId: string | undefined;
+
+  try {
+    const channelInfo = await fetchChannelInfoDiscord(channelId, opts);
+
+    // Forum/media channels (type 15, 16) can't receive webhooks directly —
+    // the agent must target a specific thread/post within the forum.
+    const FORUM_CHANNEL_TYPES = [15, 16]; // GuildForum, GuildMedia
+    if (FORUM_CHANNEL_TYPES.includes(channelInfo.type)) {
+      throw new Error(
+        `Channel ${channelId} is a forum channel. Webhook sends to forum channels require a specific thread/post ID as the "to" parameter, not the forum channel ID itself. Use the thread ID from the forum post URL.`,
+      );
+    }
+
+    if (isThreadChannelType(channelInfo.type)) {
+      const parentId = (channelInfo as unknown as { parent_id?: string }).parent_id;
+      if (parentId) {
+        webhookChannelId = parentId;
+        threadId = channelId;
+      }
+    }
+  } catch (err) {
+    // Re-throw forum channel errors so the agent gets a clear message
+    if (err instanceof Error && err.message.includes("forum channel")) throw err;
+    // Other lookup failures — fall through to original behavior
+  }
+
+  const webhook = await getOrCreateWebhook(webhookChannelId, opts);
+  let url = `https://discord.com/api/v10/webhooks/${webhook.id}/${webhook.token}`;
+  if (threadId) {
+    url += `?thread_id=${threadId}`;
+  }
 
   const chunks =
     content.length > DISCORD_TEXT_LIMIT ? chunkText(content, DISCORD_TEXT_LIMIT) : [content];
 
   for (const chunk of chunks) {
-    const body: Record<string, unknown> = { content: chunk };
+    const body: Record<string, unknown> = {
+      content: chunk,
+      allowed_mentions: { parse: ["users", "roles"] },
+    };
     if (opts.username) body.username = opts.username;
     if (opts.avatarUrl) body.avatar_url = opts.avatarUrl;
 
@@ -101,7 +139,7 @@ export async function sendWebhookMessageDiscord(
       const errorText = await response.text().catch(() => "unknown error");
       // If webhook was deleted, clear cache and retry
       if (response.status === 404) {
-        webhookCache.delete(channelId);
+        webhookCache.delete(webhookChannelId);
       }
       throw new Error(`Webhook send failed (${response.status}): ${errorText}`);
     }
