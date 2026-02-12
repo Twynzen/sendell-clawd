@@ -1,6 +1,7 @@
 import { chunkMarkdownTextWithMode, type ChunkMode } from "../../auto-reply/chunk.js";
 import type { MarkdownTableMode } from "../../config/types.base.js";
 import { convertMarkdownTables } from "../../markdown/tables.js";
+import { markdownToWhatsApp } from "../../markdown/whatsapp.js";
 import type { ReplyPayload } from "../../auto-reply/types.js";
 import { logVerbose, shouldLogVerbose } from "../../globals.js";
 import { loadWebMedia } from "../media.js";
@@ -28,7 +29,9 @@ export async function deliverWebReply(params: {
   const replyStarted = Date.now();
   const tableMode = params.tableMode ?? "code";
   const chunkMode = params.chunkMode ?? "length";
-  const convertedText = convertMarkdownTables(replyResult.text || "", tableMode);
+  const convertedText = markdownToWhatsApp(
+    convertMarkdownTables(replyResult.text || "", tableMode),
+  );
   const textChunks = chunkMarkdownTextWithMode(convertedText, textLimit, chunkMode);
   const mediaList = replyResult.mediaUrls?.length
     ? replyResult.mediaUrls
