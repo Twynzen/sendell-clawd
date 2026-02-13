@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { WebSocket, WebSocketServer } from "ws";
 import { resolveCanvasHostUrl } from "../../infra/canvas-host-url.js";
+import { truncateUtf16Safe } from "../../utils.js";
 import { listSystemPresence, upsertPresence } from "../../infra/system-presence.js";
 import type { createSubsystemLogger } from "../../logging/subsystem.js";
 import { isWebchatClient } from "../../utils/message-channel.js";
@@ -17,6 +18,42 @@ import { attachGatewayWsMessageHandler } from "./ws-connection/message-handler.j
 import type { GatewayWsClient } from "./ws-types.js";
 
 type SubsystemLogger = ReturnType<typeof createSubsystemLogger>;
+
+const LOG_HEADER_MAX_LEN = 300;
+const LOG_HEADER_FORMAT_REGEX = /\p{Cf}/gu;
+
+function replaceControlChars(value: string): string {
+  let cleaned = "";
+  for (const char of value) {
+    const codePoint = char.codePointAt(0);
+    if (
+      codePoint !== undefined &&
+      (codePoint <= 0x1f || (codePoint >= 0x7f && codePoint <= 0x9f))
+    ) {
+      cleaned += " ";
+      continue;
+    }
+    cleaned += char;
+  }
+  return cleaned;
+}
+
+const sanitizeLogValue = (value: string | undefined): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+  const cleaned = replaceControlChars(value)
+    .replace(LOG_HEADER_FORMAT_REGEX, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) {
+    return undefined;
+  }
+  if (cleaned.length <= LOG_HEADER_MAX_LEN) {
+    return cleaned;
+  }
+  return truncateUtf16Safe(cleaned, LOG_HEADER_MAX_LEN);
+};
 
 export function attachGatewayWsConnectionHandler(params: {
   wss: WebSocketServer;
