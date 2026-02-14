@@ -20,6 +20,7 @@ import { resolveMainSessionKey } from "../config/sessions.js";
 import { logWarn } from "../logger.js";
 import { getPluginToolMeta } from "../plugins/tools.js";
 import { isSubagentSessionKey } from "../routing/session-key.js";
+import { DEFAULT_GATEWAY_HTTP_TOOL_DENY } from "../security/dangerous-tools.js";
 import { normalizeMessageChannel } from "../utils/message-channel.js";
 
 import { authorizeGatewayConnect, type ResolvedGatewayAuth } from "./auth.js";
@@ -33,22 +34,6 @@ import {
 } from "./http-common.js";
 
 const DEFAULT_BODY_BYTES = 2 * 1024 * 1024;
-
-/**
- * Tools denied via HTTP /tools/invoke regardless of session policy.
- * Prevents RCE and privilege escalation from HTTP API surface.
- * Configurable via gateway.tools.{deny,allow} in openclaw.json.
- */
-const DEFAULT_GATEWAY_HTTP_TOOL_DENY = [
-  // Session orchestration — spawning agents remotely is RCE
-  "sessions_spawn",
-  // Cross-session injection — message injection across sessions
-  "sessions_send",
-  // Gateway control plane — prevents gateway reconfiguration via HTTP
-  "gateway",
-  // Interactive setup — requires terminal QR scan, hangs on HTTP
-  "whatsapp_login",
-];
 
 type ToolsInvokeBody = {
   tool?: unknown;

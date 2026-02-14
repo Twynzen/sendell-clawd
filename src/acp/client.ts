@@ -11,24 +11,7 @@ import {
 } from "@agentclientprotocol/sdk";
 
 import { ensureSendellCliOnPath } from "../infra/path-env.js";
-
-/**
- * Tools that require explicit user approval in ACP sessions.
- * These tools can execute arbitrary code, modify the filesystem,
- * or access sensitive resources.
- */
-const DANGEROUS_ACP_TOOLS = new Set([
-  "exec",
-  "spawn",
-  "shell",
-  "sessions_spawn",
-  "sessions_send",
-  "gateway",
-  "fs_write",
-  "fs_delete",
-  "fs_move",
-  "apply_patch",
-]);
+import { DANGEROUS_ACP_TOOLS } from "../security/dangerous-tools.js";
 
 function promptUserPermission(toolName: string, toolTitle?: string): Promise<boolean> {
   return new Promise((resolve) => {
