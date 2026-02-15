@@ -326,7 +326,7 @@ export function attachGatewayWsMessageHandler(params: {
           return;
         }
         const requestedScopes = Array.isArray(connectParams.scopes) ? connectParams.scopes : [];
-        const scopes =
+        let scopes =
           requestedScopes.length > 0
             ? requestedScopes
             : role === "operator"
@@ -344,6 +344,11 @@ export function attachGatewayWsMessageHandler(params: {
         const allowInsecureControlUi =
           isControlUi && configSnapshot.gateway?.controlUi?.allowInsecureAuth === true;
         if (!device) {
+          // No device identity — clear self-declared scopes to prevent privilege escalation
+          if (scopes.length > 0) {
+            scopes = [];
+            connectParams.scopes = scopes;
+          }
           const canSkipDevice = allowInsecureControlUi ? hasSharedAuth : hasTokenAuth;
 
           if (isControlUi && !allowInsecureControlUi) {

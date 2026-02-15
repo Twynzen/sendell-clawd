@@ -349,38 +349,44 @@ export async function installHooksFromNpmSpec(params: {
   const dryRun = params.dryRun ?? false;
   const expectedHookPackId = params.expectedHookPackId;
   const spec = params.spec.trim();
-  if (!spec) return { ok: false, error: "missing npm spec" };
+  const { validateRegistryNpmSpec } = await import("../infra/npm-registry-spec.js");
+  const specError = validateRegistryNpmSpec(spec);
+  if (specError) return { ok: false, error: specError };
 
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "sendell-hook-pack-"));
-  logger.info?.(`Downloading ${spec}…`);
-  const res = await runCommandWithTimeout(["npm", "pack", spec], {
-    timeoutMs: Math.max(timeoutMs, 300_000),
-    cwd: tmpDir,
-    env: { COREPACK_ENABLE_DOWNLOAD_PROMPT: "0" },
-  });
-  if (res.code !== 0) {
-    return { ok: false, error: `npm pack failed: ${res.stderr.trim() || res.stdout.trim()}` };
-  }
+  try {
+    logger.info?.(`Downloading ${spec}…`);
+    const res = await runCommandWithTimeout(["npm", "pack", spec, "--ignore-scripts"], {
+      timeoutMs: Math.max(timeoutMs, 300_000),
+      cwd: tmpDir,
+      env: { COREPACK_ENABLE_DOWNLOAD_PROMPT: "0", NPM_CONFIG_IGNORE_SCRIPTS: "true" },
+    });
+    if (res.code !== 0) {
+      return { ok: false, error: `npm pack failed: ${res.stderr.trim() || res.stdout.trim()}` };
+    }
 
-  const packed = (res.stdout || "")
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .pop();
-  if (!packed) {
-    return { ok: false, error: "npm pack produced no archive" };
-  }
+    const packed = (res.stdout || "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .pop();
+    if (!packed) {
+      return { ok: false, error: "npm pack produced no archive" };
+    }
 
-  const archivePath = path.join(tmpDir, packed);
-  return await installHooksFromArchive({
-    archivePath,
-    hooksDir: params.hooksDir,
-    timeoutMs,
-    logger,
-    mode,
-    dryRun,
-    expectedHookPackId,
-  });
+    const archivePath = path.join(tmpDir, packed);
+    return await installHooksFromArchive({
+      archivePath,
+      hooksDir: params.hooksDir,
+      timeoutMs,
+      logger,
+      mode,
+      dryRun,
+      expectedHookPackId,
+    });
+  } finally {
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => undefined);
+  }
 }
 
 export async function installHooksFromPath(params: {

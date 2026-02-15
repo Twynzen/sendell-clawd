@@ -1,3 +1,4 @@
+import { estimateBase64DecodedBytes } from "../media/base64.js";
 import { detectMime } from "../media/mime.js";
 
 export type ChatAttachment = {
@@ -83,17 +84,14 @@ export async function parseMessageWithAttachments(
     if (dataUrlMatch) {
       b64 = dataUrlMatch[1];
     }
+    // Estimate decoded size without allocating the full buffer (DoS prevention).
+    sizeBytes = estimateBase64DecodedBytes(b64);
+    if (sizeBytes <= 0 || sizeBytes > maxBytes) {
+      throw new Error(`attachment ${label}: exceeds size limit (${sizeBytes} > ${maxBytes} bytes)`);
+    }
     // Basic base64 sanity: length multiple of 4 and charset check.
     if (b64.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(b64)) {
       throw new Error(`attachment ${label}: invalid base64 content`);
-    }
-    try {
-      sizeBytes = Buffer.from(b64, "base64").byteLength;
-    } catch {
-      throw new Error(`attachment ${label}: invalid base64 content`);
-    }
-    if (sizeBytes <= 0 || sizeBytes > maxBytes) {
-      throw new Error(`attachment ${label}: exceeds size limit (${sizeBytes} > ${maxBytes} bytes)`);
     }
 
     const providedMime = normalizeMime(mime);
@@ -149,19 +147,15 @@ export function buildMessageWithAttachments(
       throw new Error(`attachment ${label}: only image/* supported`);
     }
 
-    let sizeBytes = 0;
     const b64 = content.trim();
+    // Estimate decoded size without allocating the full buffer (DoS prevention).
+    const sizeBytes = estimateBase64DecodedBytes(b64);
+    if (sizeBytes <= 0 || sizeBytes > maxBytes) {
+      throw new Error(`attachment ${label}: exceeds size limit (${sizeBytes} > ${maxBytes} bytes)`);
+    }
     // Basic base64 sanity: length multiple of 4 and charset check.
     if (b64.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(b64)) {
       throw new Error(`attachment ${label}: invalid base64 content`);
-    }
-    try {
-      sizeBytes = Buffer.from(b64, "base64").byteLength;
-    } catch {
-      throw new Error(`attachment ${label}: invalid base64 content`);
-    }
-    if (sizeBytes <= 0 || sizeBytes > maxBytes) {
-      throw new Error(`attachment ${label}: exceeds size limit (${sizeBytes} > ${maxBytes} bytes)`);
     }
 
     const safeLabel = label.replace(/\s+/g, "_");

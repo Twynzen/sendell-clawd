@@ -121,10 +121,13 @@ export function resolveHookMappings(hooks?: HooksConfig): HookMappingResolved[] 
   }
   if (mappings.length === 0) return [];
 
-  const configDir = path.dirname(CONFIG_PATH_SENDELL);
-  const transformsDir = hooks?.transformsDir
-    ? resolvePath(configDir, hooks.transformsDir)
-    : configDir;
+  const configDir = path.resolve(path.dirname(CONFIG_PATH_SENDELL));
+  const transformsRootDir = path.join(configDir, "hooks", "transforms");
+  const transformsDir = resolveOptionalContainedPath(
+    transformsRootDir,
+    hooks?.transformsDir,
+    "Hook transformsDir",
+  );
 
   return mappings.map((mapping, index) => normalizeHookMapping(mapping, index, transformsDir));
 }
@@ -169,7 +172,7 @@ function normalizeHookMapping(
   const wakeMode = mapping.wakeMode ?? "now";
   const transform = mapping.transform
     ? {
-        modulePath: resolvePath(transformsDir, mapping.transform.module),
+        modulePath: resolveContainedPath(transformsDir, mapping.transform.module, "Hook transform"),
         exportName: mapping.transform.export?.trim() || undefined,
       }
     : undefined;
@@ -312,9 +315,34 @@ function resolveTransformFn(mod: Record<string, unknown>, exportName?: string): 
 }
 
 function resolvePath(baseDir: string, target: string): string {
-  if (!target) return baseDir;
-  if (path.isAbsolute(target)) return target;
-  return path.join(baseDir, target);
+  if (!target) return path.resolve(baseDir);
+  return path.resolve(baseDir, target);
+}
+
+function resolveContainedPath(baseDir: string, target: string, label: string): string {
+  const base = path.resolve(baseDir);
+  const trimmed = target?.trim();
+  if (!trimmed) {
+    throw new Error(`${label} module path is required`);
+  }
+  const resolved = resolvePath(base, trimmed);
+  const relative = path.relative(base, resolved);
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error(`${label} module path must be within ${base}: ${target}`);
+  }
+  return resolved;
+}
+
+function resolveOptionalContainedPath(
+  baseDir: string,
+  target: string | undefined,
+  label: string,
+): string {
+  const trimmed = target?.trim();
+  if (!trimmed) {
+    return path.resolve(baseDir);
+  }
+  return resolveContainedPath(baseDir, trimmed, label);
 }
 
 function normalizeMatchPath(raw?: string): string | undefined {
