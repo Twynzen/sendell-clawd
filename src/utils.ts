@@ -4,6 +4,10 @@ import path from "node:path";
 import { resolveOAuthDir } from "./config/paths.js";
 import { logVerbose, shouldLogVerbose } from "./globals.js";
 
+export function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function ensureDir(dir: string) {
   await fs.promises.mkdir(dir, { recursive: true });
 }

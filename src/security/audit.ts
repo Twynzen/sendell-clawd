@@ -292,7 +292,7 @@ function collectGatewayConfigFindings(cfg: SendellConfig): SecurityAuditFinding[
         "If you keep them enabled, keep gateway.bind loopback-only (or tailnet-only), restrict network exposure, and treat the gateway token/password as full-admin.",
     });
   }
-  if (bind !== "loopback" && !hasSharedSecret && auth.mode !== "trusted-proxy") {
+  if (bind !== "loopback" && !hasSharedSecret) {
     findings.push({
       checkId: "gateway.bind_no_auth",
       severity: "critical",

@@ -1,5 +1,5 @@
 import fsSync from "node:fs";
-import type { OpenClawConfig } from "../config/config.js";
+import type { SendellConfig } from "../config/config.js";
 import { resolveAgentDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
 import { resolveMemorySearchConfig } from "../agents/memory-search.js";
 import { resolveApiKeyForProvider } from "../agents/model-auth.js";
@@ -11,7 +11,7 @@ import { resolveUserPath } from "../utils.js";
  * Check whether memory search has a usable embedding provider.
  * Runs as part of `openclaw doctor` — config-only, no network calls.
  */
-export async function noteMemorySearchHealth(cfg: OpenClawConfig): Promise<void> {
+export async function noteMemorySearchHealth(cfg: SendellConfig): Promise<void> {
   const agentId = resolveDefaultAgentId(cfg);
   const agentDir = resolveAgentDir(cfg, agentId);
   const resolved = resolveMemorySearchConfig(cfg, agentId);
@@ -112,7 +112,7 @@ function hasLocalEmbeddings(local: { modelPath?: string }): boolean {
 
 async function hasApiKeyForProvider(
   provider: "openai" | "gemini" | "voyage",
-  cfg: OpenClawConfig,
+  cfg: SendellConfig,
   agentDir: string,
 ): Promise<boolean> {
   // Map embedding provider names to model-auth provider names
