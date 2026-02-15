@@ -7,6 +7,7 @@ import { listSystemPresence, upsertPresence } from "../../infra/system-presence.
 import type { createSubsystemLogger } from "../../logging/subsystem.js";
 import { isWebchatClient } from "../../utils/message-channel.js";
 
+import type { AuthRateLimiter } from "../auth-rate-limit.js";
 import type { ResolvedGatewayAuth } from "../auth.js";
 import { isLoopbackAddress } from "../net.js";
 import { getHandshakeTimeoutMs } from "../server-constants.js";
@@ -63,6 +64,7 @@ export function attachGatewayWsConnectionHandler(params: {
   canvasHostEnabled: boolean;
   canvasHostServerPort?: number;
   resolvedAuth: ResolvedGatewayAuth;
+  rateLimiter?: AuthRateLimiter;
   gatewayMethods: string[];
   events: string[];
   logGateway: SubsystemLogger;
@@ -87,6 +89,7 @@ export function attachGatewayWsConnectionHandler(params: {
     canvasHostEnabled,
     canvasHostServerPort,
     resolvedAuth,
+    rateLimiter,
     gatewayMethods,
     events,
     logGateway,
@@ -273,6 +276,7 @@ export function attachGatewayWsConnectionHandler(params: {
       canvasHostUrl,
       connectNonce,
       resolvedAuth,
+      rateLimiter,
       gatewayMethods,
       events,
       extraHandlers,

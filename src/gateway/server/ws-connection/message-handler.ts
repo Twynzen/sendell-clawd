@@ -22,6 +22,8 @@ import { upsertPresence } from "../../../infra/system-presence.js";
 import { rawDataToString } from "../../../infra/ws.js";
 import type { createSubsystemLogger } from "../../../logging/subsystem.js";
 import { isGatewayCliClient, isWebchatClient } from "../../../utils/message-channel.js";
+import type { AuthRateLimiter } from "../../auth-rate-limit.js";
+import { AUTH_RATE_LIMIT_SCOPE_SHARED_SECRET } from "../../auth-rate-limit.js";
 import type { ResolvedGatewayAuth } from "../../auth.js";
 import { authorizeGatewayConnect } from "../../auth.js";
 import { loadConfig } from "../../../config/config.js";
@@ -104,6 +106,8 @@ function formatGatewayAuthFailureMessage(params: {
       return "unauthorized: tailscale identity check failed (use Tailscale Serve auth or gateway token/password)";
     case "tailscale_user_mismatch":
       return "unauthorized: tailscale identity mismatch (use Tailscale Serve auth or gateway token/password)";
+    case "rate_limited":
+      return "unauthorized: too many failed attempts, try again later";
     default:
       break;
   }
@@ -130,6 +134,7 @@ export function attachGatewayWsMessageHandler(params: {
   canvasHostUrl?: string;
   connectNonce: string;
   resolvedAuth: ResolvedGatewayAuth;
+  rateLimiter?: AuthRateLimiter;
   gatewayMethods: string[];
   events: string[];
   extraHandlers: GatewayRequestHandlers;
@@ -160,6 +165,7 @@ export function attachGatewayWsMessageHandler(params: {
     canvasHostUrl,
     connectNonce,
     resolvedAuth,
+    rateLimiter,
     gatewayMethods,
     events,
     extraHandlers,
@@ -538,12 +544,23 @@ export function attachGatewayWsMessageHandler(params: {
           }
         }
 
+        const hasDeviceTokenCandidate = Boolean(connectParams.auth?.token && device);
         const authResult = await authorizeGatewayConnect({
           auth: resolvedAuth,
           connectAuth: connectParams.auth,
           req: upgradeReq,
           trustedProxies,
+          rateLimiter: hasDeviceTokenCandidate ? undefined : rateLimiter,
+          clientIp,
         });
+        // If shared-secret auth passed, clear the rate limit for this IP+scope.
+        if (
+          authResult.ok &&
+          rateLimiter &&
+          !hasDeviceTokenCandidate
+        ) {
+          rateLimiter.reset(clientIp, AUTH_RATE_LIMIT_SCOPE_SHARED_SECRET);
+        }
         let authOk = authResult.ok;
         let authMethod =
           authResult.method ?? (resolvedAuth.mode === "password" ? "password" : "token");
