@@ -85,6 +85,8 @@ type CreateMemoryGetTool = typeof import("../../agents/tools/memory-tool.js").cr
 type CreateMemorySaveTool = typeof import("../../agents/tools/memory-tool.js").createMemorySaveTool;
 type CreateMemorySearchTool =
   typeof import("../../agents/tools/memory-tool.js").createMemorySearchTool;
+type CreateMemorySnapshotTool =
+  typeof import("../../agents/tools/memory-tool.js").createMemorySnapshotTool;
 type RegisterMemoryCli = typeof import("../../cli/memory-cli.js").registerMemoryCli;
 type DiscordMessageActions =
   typeof import("../../channels/plugins/actions/discord.js").discordMessageActions;
@@ -202,6 +204,7 @@ export type PluginRuntime = {
     createMemoryGetTool: CreateMemoryGetTool;
     createMemorySaveTool: CreateMemorySaveTool;
     createMemorySearchTool: CreateMemorySearchTool;
+    createMemorySnapshotTool: CreateMemorySnapshotTool;
     registerMemoryCli: RegisterMemoryCli;
   };
   channel: {

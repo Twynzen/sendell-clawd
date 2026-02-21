@@ -22,12 +22,17 @@ const memoryCorePlugin = {
           config: ctx.config,
           agentSessionKey: ctx.sessionKey,
         });
+        const memorySnapshotTool = api.runtime.tools.createMemorySnapshotTool({
+          config: ctx.config,
+          agentSessionKey: ctx.sessionKey,
+        });
         if (!memorySearchTool || !memoryGetTool) return null;
         const tools = [memorySearchTool, memoryGetTool];
         if (memorySaveTool) tools.push(memorySaveTool);
+        if (memorySnapshotTool) tools.push(memorySnapshotTool);
         return tools;
       },
-      { names: ["memory_search", "memory_get", "memory_save"] },
+      { names: ["memory_search", "memory_get", "memory_save", "memory_snapshot"] },
     );
 
     api.registerCli(

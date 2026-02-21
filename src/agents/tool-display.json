@@ -291,6 +291,11 @@
       "title": "Memory Save",
       "detailKeys": ["category", "title"]
     },
+    "memory_snapshot": {
+      "emoji": "📸",
+      "title": "Memory Snapshot",
+      "detailKeys": ["maxDailyNotes"]
+    },
     "web_search": {
       "emoji": "🔎",
       "title": "Web Search",

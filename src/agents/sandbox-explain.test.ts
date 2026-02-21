@@ -58,6 +58,7 @@ describe("sandbox explain helpers", () => {
       "memory_search",
       "memory_get",
       "memory_save",
+      "memory_snapshot",
       "read",
       "write",
       "edit",

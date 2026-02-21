@@ -7,6 +7,7 @@ import chokidar, { type FSWatcher } from "chokidar";
 
 import { resolveAgentDir, resolveAgentWorkspaceDir } from "../agents/agent-scope.js";
 import { runHygiene } from "./hygiene.js";
+import { hydrateFromSnapshot } from "./snapshot.js";
 import type { ResolvedMemorySearchConfig } from "../agents/memory-search.js";
 import { resolveMemorySearchConfig } from "../agents/memory-search.js";
 import type { SendellConfig } from "../config/config.js";
@@ -184,6 +185,14 @@ export class MemoryIndexManager {
     const key = `${agentId}:${workspaceDir}:${JSON.stringify(settings)}`;
     const existing = INDEX_CACHE.get(key);
     if (existing) return existing;
+
+    // Cold-boot hydration: restore memory files from snapshot if index is missing
+    try {
+      await hydrateFromSnapshot({ workspaceDir, dbPath: settings.store.path });
+    } catch (err) {
+      log.warn(`snapshot hydration failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     const providerResult = await createEmbeddingProvider({
       config: cfg,
       agentDir: resolveAgentDir(cfg, agentId),

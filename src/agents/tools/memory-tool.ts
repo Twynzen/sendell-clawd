@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 
 import type { SendellConfig } from "../../config/config.js";
 import { getMemorySearchManager } from "../../memory/index.js";
+import { exportSnapshot } from "../../memory/snapshot.js";
 import { resolveSessionAgentId } from "../agent-scope.js";
 import { resolveAgentWorkspaceDir } from "../agent-scope.js";
 import { resolveMemorySearchConfig } from "../memory-search.js";
@@ -36,6 +37,10 @@ const MemorySaveSchema = Type.Object({
     ]),
   ),
   title: Type.Optional(Type.String()),
+});
+
+const MemorySnapshotSchema = Type.Object({
+  maxDailyNotes: Type.Optional(Type.Number()),
 });
 
 export function createMemorySearchTool(options: {
@@ -261,6 +266,37 @@ export function createMemorySaveTool(options: {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         return jsonResult({ saved: false, error: message });
+      }
+    },
+  };
+}
+
+export function createMemorySnapshotTool(options: {
+  config?: SendellConfig;
+  agentSessionKey?: string;
+}): AnyAgentTool | null {
+  const cfg = options.config;
+  if (!cfg) return null;
+  const agentId = resolveSessionAgentId({
+    sessionKey: options.agentSessionKey,
+    config: cfg,
+  });
+  if (!resolveMemorySearchConfig(cfg, agentId)) return null;
+  const workspaceDir = resolveAgentWorkspaceDir(cfg, agentId);
+  return {
+    label: "Memory Snapshot",
+    name: "memory_snapshot",
+    description:
+      "Export a portable snapshot of MEMORY.md + recent daily notes to MEMORY_SNAPSHOT.md. Useful before container migrations or as a backup. The snapshot can auto-hydrate on cold boot.",
+    parameters: MemorySnapshotSchema,
+    execute: async (_toolCallId, params) => {
+      const maxDailyNotes = readNumberParam(params, "maxDailyNotes") ?? 7;
+      try {
+        const result = await exportSnapshot({ workspaceDir, maxDailyNotes });
+        return jsonResult(result);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return jsonResult({ error: message });
       }
     },
   };
