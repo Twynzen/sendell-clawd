@@ -36,6 +36,13 @@ export function bm25RankToScore(rank: number): number {
   return 1 / (1 + normalized);
 }
 
+/**
+ * Reciprocal Rank Fusion constant. Controls how much weight is given to
+ * lower-ranked results. Higher k → more uniform weighting across ranks.
+ * The standard value from the original RRF paper (Cormack et al.) is 60.
+ */
+const RRF_K = 60;
+
 export function mergeHybridResults(params: {
   vector: HybridVectorResult[];
   keyword: HybridKeywordResult[];
@@ -49,6 +56,20 @@ export function mergeHybridResults(params: {
   snippet: string;
   source: HybridSource;
 }> {
+  // Build rank maps: id → 1-based rank position (sorted by score descending)
+  const vectorRanks = new Map<string, number>();
+  const sortedVector = [...params.vector].sort((a, b) => b.vectorScore - a.vectorScore);
+  for (let i = 0; i < sortedVector.length; i++) {
+    vectorRanks.set(sortedVector[i].id, i + 1);
+  }
+
+  const keywordRanks = new Map<string, number>();
+  const sortedKeyword = [...params.keyword].sort((a, b) => b.textScore - a.textScore);
+  for (let i = 0; i < sortedKeyword.length; i++) {
+    keywordRanks.set(sortedKeyword[i].id, i + 1);
+  }
+
+  // Collect all unique results
   const byId = new Map<
     string,
     {
@@ -58,8 +79,6 @@ export function mergeHybridResults(params: {
       endLine: number;
       source: HybridSource;
       snippet: string;
-      vectorScore: number;
-      textScore: number;
     }
   >();
 
@@ -71,15 +90,12 @@ export function mergeHybridResults(params: {
       endLine: r.endLine,
       source: r.source,
       snippet: r.snippet,
-      vectorScore: r.vectorScore,
-      textScore: 0,
     });
   }
 
   for (const r of params.keyword) {
     const existing = byId.get(r.id);
     if (existing) {
-      existing.textScore = r.textScore;
       if (r.snippet && r.snippet.length > 0) existing.snippet = r.snippet;
     } else {
       byId.set(r.id, {
@@ -89,14 +105,20 @@ export function mergeHybridResults(params: {
         endLine: r.endLine,
         source: r.source,
         snippet: r.snippet,
-        vectorScore: 0,
-        textScore: r.textScore,
       });
     }
   }
 
+  // Reciprocal Rank Fusion: score = w_v/(k + rank_v) + w_t/(k + rank_t)
+  // Results not present in a ranking get rank = total+1 (worst possible)
+  const defaultVectorRank = sortedVector.length + 1;
+  const defaultKeywordRank = sortedKeyword.length + 1;
+
   const merged = Array.from(byId.values()).map((entry) => {
-    const score = params.vectorWeight * entry.vectorScore + params.textWeight * entry.textScore;
+    const vRank = vectorRanks.get(entry.id) ?? defaultVectorRank;
+    const kRank = keywordRanks.get(entry.id) ?? defaultKeywordRank;
+    const score =
+      params.vectorWeight / (RRF_K + vRank) + params.textWeight / (RRF_K + kRank);
     return {
       path: entry.path,
       startLine: entry.startLine,
