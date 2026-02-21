@@ -1,8 +1,12 @@
 import { Type } from "@sinclair/typebox";
+import fs from "node:fs/promises";
+import path from "node:path";
+import crypto from "node:crypto";
 
 import type { SendellConfig } from "../../config/config.js";
 import { getMemorySearchManager } from "../../memory/index.js";
 import { resolveSessionAgentId } from "../agent-scope.js";
+import { resolveAgentWorkspaceDir } from "../agent-scope.js";
 import { resolveMemorySearchConfig } from "../memory-search.js";
 import type { AnyAgentTool } from "./common.js";
 import { jsonResult, readNumberParam, readStringParam } from "./common.js";
@@ -17,6 +21,21 @@ const MemoryGetSchema = Type.Object({
   path: Type.String(),
   from: Type.Optional(Type.Number()),
   lines: Type.Optional(Type.Number()),
+});
+
+const MemorySaveSchema = Type.Object({
+  content: Type.String(),
+  category: Type.Optional(
+    Type.Union([
+      Type.Literal("decision"),
+      Type.Literal("discovery"),
+      Type.Literal("pattern"),
+      Type.Literal("bug"),
+      Type.Literal("preference"),
+      Type.Literal("note"),
+    ]),
+  ),
+  title: Type.Optional(Type.String()),
 });
 
 export function createMemorySearchTool(options: {
@@ -134,6 +153,114 @@ export function createMemoryGetTool(options: {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         return jsonResult({ path: relPath, text: "", disabled: true, error: message });
+      }
+    },
+  };
+}
+
+/**
+ * Content-hash dedup window: skip saves with identical content within this period.
+ */
+const DEDUP_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function contentHash(text: string): string {
+  return crypto.createHash("sha256").update(text.trim().toLowerCase()).digest("hex").slice(0, 16);
+}
+
+function todayDateStr(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function createMemorySaveTool(options: {
+  config?: SendellConfig;
+  agentSessionKey?: string;
+}): AnyAgentTool | null {
+  const cfg = options.config;
+  if (!cfg) return null;
+  const agentId = resolveSessionAgentId({
+    sessionKey: options.agentSessionKey,
+    config: cfg,
+  });
+  if (!resolveMemorySearchConfig(cfg, agentId)) return null;
+  const workspaceDir = resolveAgentWorkspaceDir(cfg, agentId);
+  return {
+    label: "Memory Save",
+    name: "memory_save",
+    description:
+      "Persist a note to the agent's memory (memory/YYYY-MM-DD.md). Use for important decisions, discoveries, patterns, bugs, or user preferences that should survive across sessions. Content-hash dedup prevents duplicates within 1 hour.",
+    parameters: MemorySaveSchema,
+    execute: async (_toolCallId, params) => {
+      const content = readStringParam(params, "content", { required: true });
+      const category = readStringParam(params, "category") ?? "note";
+      const title = readStringParam(params, "title") ?? category;
+
+      const memoryDir = path.join(workspaceDir, "memory");
+      const dateStr = todayDateStr();
+      const filePath = path.join(memoryDir, `${dateStr}.md`);
+
+      try {
+        // Ensure memory/ directory exists
+        await fs.mkdir(memoryDir, { recursive: true });
+
+        // Content-hash dedup: check if identical content was saved recently
+        const hash = contentHash(content);
+        const dedupPath = path.join(memoryDir, ".dedup-hashes.json");
+        let dedupMap: Record<string, number> = {};
+        try {
+          const raw = await fs.readFile(dedupPath, "utf-8");
+          dedupMap = JSON.parse(raw);
+        } catch {
+          // No dedup file yet — that's fine
+        }
+
+        const now = Date.now();
+        const lastSeen = dedupMap[hash];
+        if (lastSeen && now - lastSeen < DEDUP_WINDOW_MS) {
+          return jsonResult({
+            saved: false,
+            reason: "duplicate",
+            path: `memory/${dateStr}.md`,
+            hash,
+          });
+        }
+
+        // Build the entry
+        const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false });
+        const entry = `### [${category}] ${title}\n_${timestamp}_\n\n${content}\n\n---\n`;
+
+        // Append to today's file
+        let existing = "";
+        try {
+          existing = await fs.readFile(filePath, "utf-8");
+        } catch {
+          // File doesn't exist yet — will create
+        }
+
+        const separator = existing && !existing.endsWith("\n") ? "\n" : "";
+        await fs.writeFile(filePath, existing + separator + entry, "utf-8");
+
+        // Update dedup map (clean old entries while we're at it)
+        const cleaned: Record<string, number> = {};
+        for (const [k, v] of Object.entries(dedupMap)) {
+          if (now - v < DEDUP_WINDOW_MS) cleaned[k] = v;
+        }
+        cleaned[hash] = now;
+        await fs.writeFile(dedupPath, JSON.stringify(cleaned), "utf-8");
+
+        return jsonResult({
+          saved: true,
+          path: `memory/${dateStr}.md`,
+          category,
+          title,
+          hash,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return jsonResult({ saved: false, error: message });
       }
     },
   };

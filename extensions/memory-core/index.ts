@@ -18,10 +18,16 @@ const memoryCorePlugin = {
           config: ctx.config,
           agentSessionKey: ctx.sessionKey,
         });
+        const memorySaveTool = api.runtime.tools.createMemorySaveTool({
+          config: ctx.config,
+          agentSessionKey: ctx.sessionKey,
+        });
         if (!memorySearchTool || !memoryGetTool) return null;
-        return [memorySearchTool, memoryGetTool];
+        const tools = [memorySearchTool, memoryGetTool];
+        if (memorySaveTool) tools.push(memorySaveTool);
+        return tools;
       },
-      { names: ["memory_search", "memory_get"] },
+      { names: ["memory_search", "memory_get", "memory_save"] },
     );
 
     api.registerCli(
