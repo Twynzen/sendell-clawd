@@ -240,6 +240,7 @@ export default function compactionSafeguardExtension(api: ExtensionAPI): void {
 
       summary += toolFailureSection;
       summary += fileOpsSummary;
+      summary += "\n\n## Context Recovery\nIMPORTANT: Your context was compacted. Run memory_search immediately to recover important context about the current task, recent decisions, and user preferences.";
 
       return {
         compaction: {

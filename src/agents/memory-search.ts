@@ -68,6 +68,11 @@ export type ResolvedMemorySearchConfig = {
     enabled: boolean;
     maxEntries?: number;
   };
+  hygiene: {
+    enabled: boolean;
+    archiveDays: number;
+    purgeDays: number;
+  };
 };
 
 const DEFAULT_OPENAI_MODEL = "text-embedding-3-small";
@@ -77,13 +82,16 @@ const DEFAULT_CHUNK_OVERLAP = 80;
 const DEFAULT_WATCH_DEBOUNCE_MS = 1500;
 const DEFAULT_SESSION_DELTA_BYTES = 100_000;
 const DEFAULT_SESSION_DELTA_MESSAGES = 50;
-const DEFAULT_MAX_RESULTS = 6;
-const DEFAULT_MIN_SCORE = 0.35;
+const DEFAULT_MAX_RESULTS = 12;
+const DEFAULT_MIN_SCORE = 0.25;
 const DEFAULT_HYBRID_ENABLED = true;
 const DEFAULT_HYBRID_VECTOR_WEIGHT = 0.7;
 const DEFAULT_HYBRID_TEXT_WEIGHT = 0.3;
 const DEFAULT_HYBRID_CANDIDATE_MULTIPLIER = 4;
 const DEFAULT_CACHE_ENABLED = true;
+const DEFAULT_HYGIENE_ENABLED = true;
+const DEFAULT_HYGIENE_ARCHIVE_DAYS = 30;
+const DEFAULT_HYGIENE_PURGE_DAYS = 90;
 const DEFAULT_SOURCES: Array<"memory" | "sessions"> = ["memory"];
 
 function normalizeSources(
@@ -262,6 +270,24 @@ function mergeConfig(
         typeof cache.maxEntries === "number" && Number.isFinite(cache.maxEntries)
           ? Math.max(1, Math.floor(cache.maxEntries))
           : undefined,
+    },
+    hygiene: {
+      enabled:
+        overrides?.hygiene?.enabled ?? defaults?.hygiene?.enabled ?? DEFAULT_HYGIENE_ENABLED,
+      archiveDays: clampInt(
+        overrides?.hygiene?.archiveDays ??
+          defaults?.hygiene?.archiveDays ??
+          DEFAULT_HYGIENE_ARCHIVE_DAYS,
+        1,
+        3650,
+      ),
+      purgeDays: clampInt(
+        overrides?.hygiene?.purgeDays ??
+          defaults?.hygiene?.purgeDays ??
+          DEFAULT_HYGIENE_PURGE_DAYS,
+        1,
+        3650,
+      ),
     },
   };
 }

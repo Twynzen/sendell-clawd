@@ -233,4 +233,35 @@ describe("memory search config", () => {
     const resolved = resolveMemorySearchConfig(cfg, "main");
     expect(resolved?.sources).toContain("sessions");
   });
+
+  it("defaults maxResults to 12 and minScore to 0.25 (PR1 values)", () => {
+    const cfg = {
+      agents: {
+        defaults: {
+          memorySearch: {
+            provider: "openai",
+          },
+        },
+      },
+    };
+    const resolved = resolveMemorySearchConfig(cfg, "main");
+    expect(resolved?.query.maxResults).toBe(12);
+    expect(resolved?.query.minScore).toBe(0.25);
+  });
+
+  it("config overrides still take precedence over new defaults", () => {
+    const cfg = {
+      agents: {
+        defaults: {
+          memorySearch: {
+            provider: "openai",
+            query: { maxResults: 6, minScore: 0.35 },
+          },
+        },
+      },
+    };
+    const resolved = resolveMemorySearchConfig(cfg, "main");
+    expect(resolved?.query.maxResults).toBe(6);
+    expect(resolved?.query.minScore).toBe(0.35);
+  });
 });

@@ -374,6 +374,14 @@ export const MemorySearchSchema = z
       })
       .strict()
       .optional(),
+    hygiene: z
+      .object({
+        enabled: z.boolean().optional(),
+        archiveDays: z.number().int().positive().optional(),
+        purgeDays: z.number().int().positive().optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .optional();

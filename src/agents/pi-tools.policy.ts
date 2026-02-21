@@ -71,6 +71,8 @@ const DEFAULT_SUBAGENT_TOOL_DENY = [
   // Memory - pass relevant info in spawn prompt instead
   "memory_search",
   "memory_get",
+  "memory_save",
+  "memory_snapshot",
 ];
 
 export function resolveSubagentToolPolicy(cfg?: SendellConfig): SandboxToolPolicy {

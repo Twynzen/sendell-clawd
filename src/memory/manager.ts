@@ -6,6 +6,8 @@ import type { DatabaseSync } from "node:sqlite";
 import chokidar, { type FSWatcher } from "chokidar";
 
 import { resolveAgentDir, resolveAgentWorkspaceDir } from "../agents/agent-scope.js";
+import { runHygiene } from "./hygiene.js";
+import { hydrateFromSnapshot } from "./snapshot.js";
 import type { ResolvedMemorySearchConfig } from "../agents/memory-search.js";
 import { resolveMemorySearchConfig } from "../agents/memory-search.js";
 import type { SendellConfig } from "../config/config.js";
@@ -183,6 +185,14 @@ export class MemoryIndexManager {
     const key = `${agentId}:${workspaceDir}:${JSON.stringify(settings)}`;
     const existing = INDEX_CACHE.get(key);
     if (existing) return existing;
+
+    // Cold-boot hydration: restore memory files from snapshot if index is missing
+    try {
+      await hydrateFromSnapshot({ workspaceDir, dbPath: settings.store.path });
+    } catch (err) {
+      log.warn(`snapshot hydration failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     const providerResult = await createEmbeddingProvider({
       config: cfg,
       agentDir: resolveAgentDir(cfg, agentId),
@@ -292,18 +302,65 @@ export class MemoryIndexManager {
       ? await this.searchVector(queryVec, candidates).catch(() => [])
       : [];
 
+    let results: MemorySearchResult[];
     if (!hybrid.enabled) {
-      return vectorResults.filter((entry) => entry.score >= minScore).slice(0, maxResults);
+      results = vectorResults.filter((entry) => entry.score >= minScore).slice(0, maxResults);
+    } else {
+      const merged = this.mergeHybridResults({
+        vector: vectorResults,
+        keyword: keywordResults,
+        vectorWeight: hybrid.vectorWeight,
+        textWeight: hybrid.textWeight,
+      });
+      results = merged.filter((entry) => entry.score >= minScore).slice(0, maxResults);
     }
 
-    const merged = this.mergeHybridResults({
-      vector: vectorResults,
-      keyword: keywordResults,
-      vectorWeight: hybrid.vectorWeight,
-      textWeight: hybrid.textWeight,
-    });
+    return this.applyRecencyBoost(results);
+  }
 
-    return merged.filter((entry) => entry.score >= minScore).slice(0, maxResults);
+  /**
+   * Apply a recency boost to search results based on file dates.
+   * Files matching memory/YYYY-MM-DD.md pattern get a date-based boost.
+   * Other files use their mtime from the index.
+   * Half-life decay: boost = 1 + weight * exp(-age_days / halfLife_days)
+   */
+  private applyRecencyBoost(results: MemorySearchResult[]): MemorySearchResult[] {
+    if (results.length === 0) return results;
+    const RECENCY_WEIGHT = 0.15;
+    const HALF_LIFE_DAYS = 14;
+    const now = Date.now();
+    const datePattern = /(\d{4})-(\d{2})-(\d{2})/;
+
+    const fileMtimes = new Map<string, number>();
+    try {
+      const rows = this.db
+        .prepare(`SELECT path, mtime FROM files`)
+        .all() as Array<{ path: string; mtime: number }>;
+      for (const row of rows) {
+        fileMtimes.set(row.path, row.mtime);
+      }
+    } catch {
+      return results;
+    }
+
+    return results
+      .map((result) => {
+        let fileDate: number | null = null;
+        const match = result.path.match(datePattern);
+        if (match) {
+          const parsed = new Date(`${match[1]}-${match[2]}-${match[3]}T12:00:00`);
+          if (!isNaN(parsed.getTime())) fileDate = parsed.getTime();
+        }
+        if (fileDate === null) {
+          fileDate = fileMtimes.get(result.path) ?? null;
+        }
+        if (fileDate === null) return result;
+
+        const ageDays = Math.max(0, (now - fileDate) / (1000 * 60 * 60 * 24));
+        const boost = 1 + RECENCY_WEIGHT * Math.exp(-ageDays / HALF_LIFE_DAYS);
+        return { ...result, score: result.score * boost };
+      })
+      .sort((a, b) => b.score - a.score);
   }
 
   private async searchVector(
@@ -1217,6 +1274,20 @@ export class MemoryIndexManager {
         this.sessionsDirty = true;
       } else {
         this.sessionsDirty = false;
+      }
+
+      // Run memory hygiene (archive/purge old files) — throttled to once per 24h
+      if (this.settings.hygiene.enabled) {
+        try {
+          const stateDir = resolveAgentDir(this.cfg, this.agentId);
+          await runHygiene({
+            workspaceDir: this.workspaceDir,
+            config: this.settings.hygiene,
+            stateDir,
+          });
+        } catch (err) {
+          log.warn(`memory hygiene failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
       }
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);

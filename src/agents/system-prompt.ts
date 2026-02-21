@@ -37,11 +37,31 @@ function buildMemorySection(params: { isMinimal: boolean; availableTools: Set<st
   if (!params.availableTools.has("memory_search") && !params.availableTools.has("memory_get")) {
     return [];
   }
-  return [
+  const lines = [
     "## Memory Recall",
-    "Before answering anything about prior work, decisions, dates, people, preferences, or todos: run memory_search on MEMORY.md + memory/*.md; then use memory_get to pull only the needed lines. If low confidence after search, say you checked.",
-    "",
+    "MANDATORY: Before answering ANY question that could benefit from past context, run memory_search first.",
+    "This includes questions about: prior work, decisions, dates, people, preferences, todos, bugs, patterns, architecture, or anything the user has told you before.",
+    "After memory_search, use memory_get to pull only the needed lines and keep context small.",
+    "If memory_search returns no results, mention that you checked memory but found nothing relevant.",
+    "When in doubt about whether to search, ALWAYS search — the cost of a redundant search is much lower than missing important context.",
   ];
+  if (params.availableTools.has("memory_save")) {
+    lines.push(
+      "",
+      "## Memory Save",
+      "Use memory_save to persist important information across sessions: decisions made, discoveries, patterns found, bugs encountered, or user preferences.",
+      "Categories: decision, discovery, pattern, bug, preference, note.",
+      "Duplicates within 1 hour are automatically skipped.",
+    );
+  }
+  lines.push(
+    "",
+    "## Compaction Recovery",
+    "If you notice a compaction summary above (older messages were summarized), immediately run memory_search to recover important context that may have been lost.",
+    "Search for: the current goal, recent decisions, modified files, and any user preferences.",
+  );
+  lines.push("");
+  return lines;
 }
 
 function buildUserIdentitySection(ownerLine: string | undefined, isMinimal: boolean) {
