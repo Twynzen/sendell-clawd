@@ -68,6 +68,27 @@ export function createMemorySearchTool(options: {
   };
 }
 
+/**
+ * Identity files that cannot be read via memory_get.
+ * These files define the agent's core identity and rules — allowing
+ * the agent to read them via the memory tool could enable prompt
+ * injection attacks that modify perceived identity/instructions.
+ */
+const PROTECTED_IDENTITY_FILES = new Set([
+  "soul.md",
+  "agents.md",
+  "identity.md",
+  "user.md",
+  "tools.md",
+  "heartbeat.md",
+  "bootstrap.md",
+]);
+
+function isProtectedIdentityFile(relPath: string): boolean {
+  const basename = relPath.replace(/\\/g, "/").split("/").pop()?.toLowerCase() ?? "";
+  return PROTECTED_IDENTITY_FILES.has(basename);
+}
+
 export function createMemoryGetTool(options: {
   config?: SendellConfig;
   agentSessionKey?: string;
@@ -87,6 +108,13 @@ export function createMemoryGetTool(options: {
     parameters: MemoryGetSchema,
     execute: async (_toolCallId, params) => {
       const relPath = readStringParam(params, "path", { required: true });
+      if (isProtectedIdentityFile(relPath)) {
+        return jsonResult({
+          path: relPath,
+          text: "",
+          error: "Access denied: identity files (SOUL.md, AGENTS.md, etc.) cannot be read via memory_get",
+        });
+      }
       const from = readNumberParam(params, "from", { integer: true });
       const lines = readNumberParam(params, "lines", { integer: true });
       const { manager, error } = await getMemorySearchManager({
