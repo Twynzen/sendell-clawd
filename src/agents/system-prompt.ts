@@ -54,6 +54,12 @@ function buildMemorySection(params: { isMinimal: boolean; availableTools: Set<st
       "Duplicates within 1 hour are automatically skipped.",
     );
   }
+  lines.push(
+    "",
+    "## Compaction Recovery",
+    "If you notice a compaction summary above (older messages were summarized), immediately run memory_search to recover important context that may have been lost.",
+    "Search for: the current goal, recent decisions, modified files, and any user preferences.",
+  );
   lines.push("");
   return lines;
 }
