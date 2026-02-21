@@ -6,6 +6,7 @@ import type { DatabaseSync } from "node:sqlite";
 import chokidar, { type FSWatcher } from "chokidar";
 
 import { resolveAgentDir, resolveAgentWorkspaceDir } from "../agents/agent-scope.js";
+import { runHygiene } from "./hygiene.js";
 import type { ResolvedMemorySearchConfig } from "../agents/memory-search.js";
 import { resolveMemorySearchConfig } from "../agents/memory-search.js";
 import type { SendellConfig } from "../config/config.js";
@@ -1264,6 +1265,20 @@ export class MemoryIndexManager {
         this.sessionsDirty = true;
       } else {
         this.sessionsDirty = false;
+      }
+
+      // Run memory hygiene (archive/purge old files) — throttled to once per 24h
+      if (this.settings.hygiene.enabled) {
+        try {
+          const stateDir = resolveAgentDir(this.cfg, this.agentId);
+          await runHygiene({
+            workspaceDir: this.workspaceDir,
+            config: this.settings.hygiene,
+            stateDir,
+          });
+        } catch (err) {
+          log.warn(`memory hygiene failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
       }
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);

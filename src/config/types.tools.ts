@@ -306,6 +306,15 @@ export type MemorySearchConfig = {
     /** Optional cap on cached embeddings (best-effort). */
     maxEntries?: number;
   };
+  /** Memory hygiene lifecycle. */
+  hygiene?: {
+    /** Enable automatic archiving/purging of old memory files (default: true). */
+    enabled?: boolean;
+    /** Days before daily notes are moved to memory/archive/ (default: 30). */
+    archiveDays?: number;
+    /** Days before archived files are purged (default: 90). */
+    purgeDays?: number;
+  };
 };
 
 export type ToolsConfig = {
