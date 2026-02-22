@@ -25,11 +25,7 @@ import { getSkillsSnapshotVersion } from "../../agents/skills/refresh.js";
 import { resolveAgentTimeoutMs } from "../../agents/timeout.js";
 import { hasNonzeroUsage } from "../../agents/usage.js";
 import { ensureAgentWorkspace } from "../../agents/workspace.js";
-import {
-  formatUserTime,
-  resolveUserTimeFormat,
-  resolveUserTimezone,
-} from "../../agents/date-time.js";
+import { resolveCronStyleNow } from "../../agents/current-time.js";
 import {
   formatXHighModelHint,
   normalizeThinkLevel,
@@ -246,11 +242,7 @@ export async function runCronIsolatedAgentTurn(params: {
     to: agentPayload?.to,
   });
 
-  const userTimezone = resolveUserTimezone(params.cfg.agents?.defaults?.userTimezone);
-  const userTimeFormat = resolveUserTimeFormat(params.cfg.agents?.defaults?.timeFormat);
-  const formattedTime =
-    formatUserTime(new Date(now), userTimezone, userTimeFormat) ?? new Date(now).toISOString();
-  const timeLine = `Current time: ${formattedTime} (${userTimezone})`;
+  const { formattedTime, timeLine } = resolveCronStyleNow(params.cfg, now);
   const base = `[cron:${params.job.id} ${params.job.name}] ${params.message}`.trim();
 
   // SECURITY: Wrap external hook content with security boundaries to prevent prompt injection

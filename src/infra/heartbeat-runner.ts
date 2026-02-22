@@ -6,6 +6,7 @@ import {
   resolveAgentWorkspaceDir,
   resolveDefaultAgentId,
 } from "../agents/agent-scope.js";
+import { appendCronStyleCurrentTimeLine } from "../agents/current-time.js";
 import { resolveUserTimezone } from "../agents/date-time.js";
 import { resolveEffectiveMessagesConfig } from "../agents/identity.js";
 import { DEFAULT_HEARTBEAT_FILENAME } from "../agents/workspace.js";
@@ -501,7 +502,7 @@ export async function runHeartbeatOnce(opts: {
 
   const prompt = hasExecCompletion ? EXEC_EVENT_PROMPT : resolveHeartbeatPrompt(cfg, heartbeat);
   const ctx = {
-    Body: prompt,
+    Body: appendCronStyleCurrentTimeLine(prompt, cfg, startedAt),
     From: sender,
     To: sender,
     Provider: hasExecCompletion ? "exec-event" : "heartbeat",
