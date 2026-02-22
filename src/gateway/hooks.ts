@@ -3,6 +3,7 @@ import type { IncomingMessage } from "node:http";
 import { listChannelPlugins } from "../channels/plugins/index.js";
 import type { ChannelId } from "../channels/plugins/types.js";
 import type { SendellConfig } from "../config/config.js";
+import { readJsonBodyWithLimit, requestBodyErrorToText } from "../infra/http-body.js";
 import { normalizeMessageChannel } from "../utils/message-channel.js";
 import { type HookMappingResolved, resolveHookMappings } from "./hooks-mapping.js";
 
@@ -67,42 +68,20 @@ export async function readJsonBody(
   req: IncomingMessage,
   maxBytes: number,
 ): Promise<{ ok: true; value: unknown } | { ok: false; error: string }> {
-  return await new Promise((resolve) => {
-    let done = false;
-    let total = 0;
-    const chunks: Buffer[] = [];
-    req.on("data", (chunk: Buffer) => {
-      if (done) return;
-      total += chunk.length;
-      if (total > maxBytes) {
-        done = true;
-        resolve({ ok: false, error: "payload too large" });
-        req.destroy();
-        return;
-      }
-      chunks.push(chunk);
-    });
-    req.on("end", () => {
-      if (done) return;
-      done = true;
-      const raw = Buffer.concat(chunks).toString("utf-8").trim();
-      if (!raw) {
-        resolve({ ok: true, value: {} });
-        return;
-      }
-      try {
-        const parsed = JSON.parse(raw) as unknown;
-        resolve({ ok: true, value: parsed });
-      } catch (err) {
-        resolve({ ok: false, error: String(err) });
-      }
-    });
-    req.on("error", (err) => {
-      if (done) return;
-      done = true;
-      resolve({ ok: false, error: String(err) });
-    });
-  });
+  const result = await readJsonBodyWithLimit(req, { maxBytes, emptyObjectOnEmpty: true });
+  if (result.ok) {
+    return result;
+  }
+  if (result.code === "PAYLOAD_TOO_LARGE") {
+    return { ok: false, error: "payload too large" };
+  }
+  if (result.code === "REQUEST_BODY_TIMEOUT") {
+    return { ok: false, error: "request body timeout" };
+  }
+  if (result.code === "CONNECTION_CLOSED") {
+    return { ok: false, error: requestBodyErrorToText("CONNECTION_CLOSED") };
+  }
+  return { ok: false, error: result.error };
 }
 
 export function normalizeHookHeaders(req: IncomingMessage) {
