@@ -15,6 +15,40 @@ import { normalizeProviderId } from "../model-selection.js";
 
 type InlineModelEntry = ModelDefinitionConfig & { provider: string };
 
+/**
+ * Built-in model definitions for models not yet in @mariozechner/pi-ai.
+ * When pi-ai updates to include these, the registry entry takes precedence
+ * (this map is only consulted as a fallback).
+ */
+const BUILTIN_MODELS: Record<string, Record<string, Omit<Model<Api>, "provider"> & { provider: string }>> = {
+  anthropic: {
+    "claude-opus-4-6": {
+      id: "claude-opus-4-6",
+      name: "Claude Opus 4.6",
+      api: "anthropic-messages" as Api,
+      provider: "anthropic",
+      baseUrl: "https://api.anthropic.com",
+      reasoning: true,
+      input: ["text", "image"],
+      cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
+      contextWindow: 200000,
+      maxTokens: 128000,
+    },
+    "claude-sonnet-4-6": {
+      id: "claude-sonnet-4-6",
+      name: "Claude Sonnet 4.6",
+      api: "anthropic-messages" as Api,
+      provider: "anthropic",
+      baseUrl: "https://api.anthropic.com",
+      reasoning: true,
+      input: ["text", "image"],
+      cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+      contextWindow: 200000,
+      maxTokens: 128000,
+    },
+  },
+};
+
 export function buildInlineProviderModels(
   providers: Record<string, { models?: ModelDefinitionConfig[] }>,
 ): InlineModelEntry[] {
@@ -70,6 +104,13 @@ export function resolveModel(
         modelRegistry,
       };
     }
+    // Check built-in models for recently released models not yet in pi-ai
+    const builtinProvider = BUILTIN_MODELS[normalizedProvider];
+    if (builtinProvider?.[modelId]) {
+      const builtinModel = normalizeModelCompat(builtinProvider[modelId] as Model<Api>);
+      return { model: builtinModel, authStorage, modelRegistry };
+    }
+
     const providerCfg = providers[provider];
     if (providerCfg || modelId.startsWith("mock-")) {
       const fallbackModel: Model<Api> = normalizeModelCompat({
