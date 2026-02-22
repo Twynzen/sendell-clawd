@@ -865,24 +865,40 @@ export function startHeartbeatRunner(opts: {
     const now = startedAt;
     let ran = false;
 
+    const advanceAgentSchedule = (agent: HeartbeatAgentState) => {
+      agent.lastRunMs = now;
+      agent.nextDueMs = now + agent.intervalMs;
+    };
+
     for (const agent of state.agents.values()) {
       if (isInterval && now < agent.nextDueMs) {
         continue;
       }
 
-      const res = await runOnce({
-        cfg: state.cfg,
-        agentId: agent.agentId,
-        heartbeat: agent.heartbeat,
-        reason,
-        deps: { runtime: state.runtime },
-      });
+      let res: HeartbeatRunResult;
+      try {
+        res = await runOnce({
+          cfg: state.cfg,
+          agentId: agent.agentId,
+          heartbeat: agent.heartbeat,
+          reason,
+          deps: { runtime: state.runtime },
+        });
+      } catch (err) {
+        // If runOnce throws (e.g. during session compaction), we must still
+        // advance the timer and call scheduleNext so heartbeats keep firing.
+        const errMsg = formatErrorMessage(err);
+        log.error(`heartbeat runner: runOnce threw unexpectedly: ${errMsg}`, { error: errMsg });
+        advanceAgentSchedule(agent);
+        continue;
+      }
       if (res.status === "skipped" && res.reason === "requests-in-flight") {
+        advanceAgentSchedule(agent);
+        scheduleNext();
         return res;
       }
       if (res.status !== "skipped" || res.reason !== "disabled") {
-        agent.lastRunMs = now;
-        agent.nextDueMs = now + agent.intervalMs;
+        advanceAgentSchedule(agent);
       }
       if (res.status === "ran") ran = true;
     }
