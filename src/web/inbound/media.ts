@@ -42,7 +42,7 @@ function resolveMediaMimetype(message: proto.IMessage): string | undefined {
 export async function downloadInboundMedia(
   msg: proto.IWebMessageInfo,
   sock: Awaited<ReturnType<typeof createWaSocket>>,
-): Promise<{ buffer: Buffer; mimetype?: string } | undefined> {
+): Promise<{ buffer: Buffer; mimetype?: string; fileName?: string } | undefined> {
   const message = unwrapMessage(msg.message as proto.IMessage | undefined);
   if (!message) {
     return undefined;
@@ -68,7 +68,7 @@ export async function downloadInboundMedia(
         logger: sock.logger,
       },
     )) as Buffer;
-    return { buffer, mimetype };
+    return { buffer, mimetype, fileName };
   } catch (err) {
     logVerbose(`downloadMediaMessage failed: ${String(err)}`);
     return undefined;
