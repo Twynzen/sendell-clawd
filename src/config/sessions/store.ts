@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import JSON5 from "json5";
 import { getFileMtimeMs, isCacheEnabled, resolveCacheTtlMs } from "../cache-utils.js";
 import {
   deliveryContextFromSession,
@@ -118,7 +117,7 @@ export function loadSessionStore(
   let mtimeMs = getFileMtimeMs(storePath);
   try {
     const raw = fs.readFileSync(storePath, "utf-8");
-    const parsed = JSON5.parse(raw);
+    const parsed = JSON.parse(raw);
     if (isSessionStoreRecord(parsed)) {
       store = parsed as Record<string, SessionEntry>;
     }

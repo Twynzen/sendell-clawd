@@ -25,6 +25,8 @@ export type GetReplyOptions = {
   onReplyStart?: () => Promise<void> | void;
   onTypingController?: (typing: TypingController) => void;
   isHeartbeat?: boolean;
+  /** Resolved heartbeat model override (provider/model string from merged per-agent config). */
+  heartbeatModelOverride?: string;
   onPartialReply?: (payload: ReplyPayload) => Promise<void> | void;
   onReasoningStream?: (payload: ReplyPayload) => Promise<void> | void;
   onBlockReply?: (payload: ReplyPayload, context?: BlockReplyContext) => Promise<void> | void;

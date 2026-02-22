@@ -10,6 +10,7 @@ import {
   isCompactionFailureError,
   isContextOverflowError,
   isLikelyContextOverflowError,
+  isTransientHttpError,
   sanitizeUserFacingText,
 } from "../../agents/pi-embedded-helpers.js";
 import {
@@ -95,6 +96,8 @@ export async function runAgentTurnWithFallback(params: {
   let fallbackProvider = params.followupRun.run.provider;
   let fallbackModel = params.followupRun.run.model;
   let didResetAfterCompactionFailure = false;
+  let didRetryTransientHttpError = false;
+  const TRANSIENT_HTTP_RETRY_DELAY_MS = 2_500;
 
   while (true) {
     try {
@@ -452,6 +455,7 @@ export async function runAgentTurnWithFallback(params: {
       const isCompactionFailure = isCompactionFailureError(message);
       const isSessionCorruption = /function call turn comes immediately after/i.test(message);
       const isRoleOrderingError = /incorrect role information|roles must alternate/i.test(message);
+      const isTransientHttp = isTransientHttpError(message);
 
       if (
         isCompactionFailure &&
@@ -523,8 +527,22 @@ export async function runAgentTurnWithFallback(params: {
         };
       }
 
+      if (isTransientHttp && !didRetryTransientHttpError) {
+        didRetryTransientHttpError = true;
+        defaultRuntime.error(
+          `Transient HTTP provider error before reply (${message}). Retrying once in ${TRANSIENT_HTTP_RETRY_DELAY_MS}ms.`,
+        );
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, TRANSIENT_HTTP_RETRY_DELAY_MS);
+        });
+        continue;
+      }
+
       defaultRuntime.error(`Embedded agent failed before reply: ${message}`);
-      const trimmedMessage = message.replace(/\.\s*$/, "");
+      const safeMessage = isTransientHttp
+        ? sanitizeUserFacingText(message)
+        : message;
+      const trimmedMessage = safeMessage.replace(/\.\s*$/, "");
       const fallbackText = isContextOverflow
         ? "⚠️ Context overflow — prompt too large for this model. Try a shorter message or a larger-context model."
         : isRoleOrderingError
