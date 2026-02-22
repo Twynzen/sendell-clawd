@@ -43,6 +43,9 @@ export function computeJobNextRunAtMs(job: CronJob, nowMs: number): number | und
   return computeNextRunAtMs(job.schedule, nowMs);
 }
 
+/** Maximum consecutive schedule errors before auto-disabling a job. */
+const MAX_SCHEDULE_ERRORS = 3;
+
 export function recomputeNextRuns(state: CronServiceState) {
   if (!state.store) return;
   const now = state.deps.nowMs();
@@ -61,7 +64,31 @@ export function recomputeNextRuns(state: CronServiceState) {
       );
       job.state.runningAtMs = undefined;
     }
-    job.state.nextRunAtMs = computeJobNextRunAtMs(job, now);
+    try {
+      job.state.nextRunAtMs = computeJobNextRunAtMs(job, now);
+      // Clear schedule error count on successful computation.
+      if (job.state.scheduleErrorCount) {
+        job.state.scheduleErrorCount = undefined;
+      }
+    } catch (err) {
+      const errorCount = (job.state.scheduleErrorCount ?? 0) + 1;
+      job.state.scheduleErrorCount = errorCount;
+      job.state.nextRunAtMs = undefined;
+      job.state.lastError = `schedule error: ${String(err)}`;
+
+      if (errorCount >= MAX_SCHEDULE_ERRORS) {
+        job.enabled = false;
+        state.deps.log.error(
+          { jobId: job.id, name: job.name, errorCount, err: String(err) },
+          "cron: auto-disabled job after repeated schedule errors",
+        );
+      } else {
+        state.deps.log.warn(
+          { jobId: job.id, name: job.name, errorCount, err: String(err) },
+          "cron: failed to compute next run for job (skipping)",
+        );
+      }
+    }
   }
 }
 
