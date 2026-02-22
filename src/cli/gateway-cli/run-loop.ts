@@ -5,7 +5,8 @@ import {
   isGatewaySigusr1RestartExternallyAllowed,
 } from "../../infra/restart.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
-import { getActiveTaskCount, waitForActiveTasks } from "../../process/command-queue.js";
+import { resetHeartbeatWakeState } from "../../infra/heartbeat-wake.js";
+import { getActiveTaskCount, resetAllLanes, waitForActiveTasks } from "../../process/command-queue.js";
 import type { defaultRuntime } from "../../runtime.js";
 
 const gatewayLog = createSubsystemLogger("gateway");
@@ -76,6 +77,10 @@ export async function runGatewayLoop(params: {
         clearTimeout(forceExitTimer);
         server = null;
         if (isRestart) {
+          // Reset stale execution state so old in-flight tasks
+          // don't block new work after the restart.
+          resetAllLanes();
+          resetHeartbeatWakeState();
           shuttingDown = false;
           restartResolver?.();
         } else {

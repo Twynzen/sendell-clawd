@@ -113,3 +113,20 @@ export function hasHeartbeatWakeHandler() {
 export function hasPendingHeartbeatWake() {
   return pendingReason !== null || Boolean(timer) || scheduled;
 }
+
+/**
+ * Reset heartbeat wake state after an in-process restart. Clears the
+ * running flag left behind by an interrupted heartbeat turn so subsequent
+ * wake requests are not blocked indefinitely.
+ */
+export function resetHeartbeatWakeState(): void {
+  running = false;
+  scheduled = false;
+  pendingReason = null;
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+    timerDueAt = null;
+    timerKind = null;
+  }
+}
