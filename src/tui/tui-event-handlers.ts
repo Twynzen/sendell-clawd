@@ -74,6 +74,15 @@ export function createEventHandlers(context: EventHandlerContext) {
       setActivityStatus("streaming");
     }
     if (evt.state === "final") {
+      if (!evt.message) {
+        chatLog.dropAssistant(evt.runId);
+        noteFinalizedRun(evt.runId);
+        state.activeChatRunId = null;
+        setActivityStatus("idle");
+        void refreshSessionInfo?.();
+        tui.requestRender();
+        return;
+      }
       if (isCommandMessage(evt.message)) {
         const text = extractTextFromMessage(evt.message);
         if (text) chatLog.addSystem(text);
