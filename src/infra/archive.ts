@@ -10,6 +10,20 @@ export type ArchiveLogger = {
   warn?: (message: string) => void;
 };
 
+export type ArchiveExtractLimits = {
+  /**
+   * Max archive file bytes (compressed). Primarily protects zip extraction
+   * because we currently read the whole archive into memory for parsing.
+   */
+  maxArchiveBytes?: number;
+  /** Max number of extracted entries (files + dirs). */
+  maxEntries?: number;
+  /** Max extracted bytes (sum of all files). */
+  maxExtractedBytes?: number;
+  /** Max extracted bytes for a single file entry. */
+  maxEntryBytes?: number;
+};
+
 const TAR_SUFFIXES = [".tgz", ".tar.gz", ".tar"];
 
 export function resolveArchiveKind(filePath: string): ArchiveKind | null {
@@ -61,10 +75,43 @@ export async function withTimeout<T>(
   }
 }
 
-async function extractZip(params: { archivePath: string; destDir: string }): Promise<void> {
+function clampLimit(value: number | undefined): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return undefined;
+  }
+  const v = Math.floor(value);
+  return v > 0 ? v : undefined;
+}
+
+function resolveExtractLimits(limits?: ArchiveExtractLimits): Required<ArchiveExtractLimits> {
+  return {
+    maxArchiveBytes: clampLimit(limits?.maxArchiveBytes) ?? 256 * 1024 * 1024,
+    maxEntries: clampLimit(limits?.maxEntries) ?? 50_000,
+    maxExtractedBytes: clampLimit(limits?.maxExtractedBytes) ?? 512 * 1024 * 1024,
+    maxEntryBytes: clampLimit(limits?.maxEntryBytes) ?? 256 * 1024 * 1024,
+  };
+}
+
+async function extractZip(params: {
+  archivePath: string;
+  destDir: string;
+  limits?: ArchiveExtractLimits;
+}): Promise<void> {
+  const limits = resolveExtractLimits(params.limits);
+  const stat = await fs.stat(params.archivePath);
+  if (stat.size > limits.maxArchiveBytes) {
+    throw new Error("archive size exceeds limit");
+  }
+
   const buffer = await fs.readFile(params.archivePath);
   const zip = await JSZip.loadAsync(buffer);
   const entries = Object.values(zip.files);
+
+  if (entries.length > limits.maxEntries) {
+    throw new Error("archive entry count exceeds limit");
+  }
+
+  let extractedBytes = 0;
 
   for (const entry of entries) {
     const entryPath = entry.name.replaceAll("\\", "/");
@@ -83,6 +130,15 @@ async function extractZip(params: { archivePath: string; destDir: string }): Pro
     }
     await fs.mkdir(path.dirname(outPath), { recursive: true });
     const data = await entry.async("nodebuffer");
+
+    if (data.byteLength > limits.maxEntryBytes) {
+      throw new Error("archive entry extracted size exceeds limit");
+    }
+    extractedBytes += data.byteLength;
+    if (extractedBytes > limits.maxExtractedBytes) {
+      throw new Error("archive extracted size exceeds limit");
+    }
+
     await fs.writeFile(outPath, data);
   }
 }
@@ -91,6 +147,7 @@ export async function extractArchive(params: {
   archivePath: string;
   destDir: string;
   timeoutMs: number;
+  limits?: ArchiveExtractLimits;
   logger?: ArchiveLogger;
 }): Promise<void> {
   const kind = resolveArchiveKind(params.archivePath);
@@ -108,7 +165,15 @@ export async function extractArchive(params: {
     return;
   }
 
-  await withTimeout(extractZip(params), params.timeoutMs, label);
+  await withTimeout(
+    extractZip({
+      archivePath: params.archivePath,
+      destDir: params.destDir,
+      limits: params.limits,
+    }),
+    params.timeoutMs,
+    label,
+  );
 }
 
 export async function fileExists(filePath: string): Promise<boolean> {
