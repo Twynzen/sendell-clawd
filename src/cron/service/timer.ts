@@ -25,7 +25,25 @@ export function armTimer(state: CronServiceState) {
 }
 
 export async function onTimer(state: CronServiceState) {
-  if (state.running) return;
+  if (state.running) {
+    // Re-arm the timer so the scheduler keeps ticking even when a job is
+    // still executing. Without this, a long-running job causes the timer to
+    // fire while `running` is true, and the early return leaves no timer set,
+    // silently killing the scheduler until the next gateway restart.
+    // Use MAX_TIMEOUT_MS-capped 60s re-check to avoid a zero-delay hot-loop.
+    const RECHECK_MS = 60_000;
+    if (state.timer) {
+      clearTimeout(state.timer);
+    }
+    state.timer = setTimeout(async () => {
+      try {
+        await onTimer(state);
+      } catch (err) {
+        state.deps.log.error({ err: String(err) }, "cron: timer tick failed");
+      }
+    }, RECHECK_MS);
+    return;
+  }
   state.running = true;
   try {
     await locked(state, async () => {
