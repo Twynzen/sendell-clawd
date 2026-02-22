@@ -33,6 +33,11 @@ export type CronServiceDeps = {
     /** Last non-empty agent text output (not truncated). */
     outputText?: string;
     error?: string;
+    /**
+     * `true` when the isolated run already delivered its output to the target
+     * channel. Callers should skip posting to main to avoid duplicates.
+     */
+    delivered?: boolean;
   }>;
   onEvent?: (evt: CronEvent) => void;
 };

@@ -82,6 +82,12 @@ export type RunCronAgentTurnResult = {
   /** Last non-empty agent text output (not truncated). */
   outputText?: string;
   error?: string;
+  /**
+   * `true` when the isolated run already delivered its output to the target
+   * channel (via outbound payloads). Callers should skip posting a summary
+   * to the main session to avoid duplicate messages.
+   */
+  delivered?: boolean;
 };
 
 export async function runCronIsolatedAgentTurn(params: {
@@ -428,6 +434,7 @@ export async function runCronIsolatedAgentTurn(params: {
       }),
     );
 
+  let delivered = false;
   if (deliveryRequested && !skipHeartbeatDelivery && !skipMessagingToolDelivery) {
     if (!resolvedDelivery.to) {
       const reason =
@@ -456,6 +463,7 @@ export async function runCronIsolatedAgentTurn(params: {
         bestEffort: bestEffortDeliver,
         deps: createOutboundSendDeps(params.deps),
       });
+      delivered = true;
     } catch (err) {
       if (!bestEffortDeliver) {
         return { status: "error", summary, outputText, error: String(err) };
@@ -464,5 +472,5 @@ export async function runCronIsolatedAgentTurn(params: {
     }
   }
 
-  return { status: "ok", summary, outputText };
+  return { status: "ok", summary, outputText, delivered };
 }

@@ -89,6 +89,7 @@ export async function executeJob(
     err?: string,
     summary?: string,
     outputText?: string,
+    delivered?: boolean,
   ) => {
     const endedAt = state.deps.nowMs();
     job.state.runningAtMs = undefined;
@@ -129,7 +130,12 @@ export async function executeJob(
       emit(state, { jobId: job.id, action: "removed" });
     }
 
-    if (job.sessionTarget === "isolated") {
+    // Post a summary back to the main session — but only when the isolated
+    // run did NOT already deliver its output to the target channel.
+    // When `delivered` is true the outbound delivery already sent the result,
+    // so posting the summary to main would wake the main agent and cause a
+    // duplicate message.
+    if (job.sessionTarget === "isolated" && !delivered) {
       const prefix = job.isolation?.postToMainPrefix?.trim() || "Cron";
       const mode = job.isolation?.postToMainMode ?? "summary";
 
@@ -217,7 +223,8 @@ export async function executeJob(
       job,
       message: job.payload.message,
     });
-    if (res.status === "ok") await finish("ok", undefined, res.summary, res.outputText);
+    if (res.status === "ok")
+      await finish("ok", undefined, res.summary, res.outputText, res.delivered);
     else if (res.status === "skipped")
       await finish("skipped", undefined, res.summary, res.outputText);
     else await finish("error", res.error ?? "cron job failed", res.summary, res.outputText);
