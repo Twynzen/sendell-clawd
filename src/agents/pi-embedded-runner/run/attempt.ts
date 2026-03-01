@@ -23,7 +23,8 @@ import { resolveUserPath } from "../../../utils.js";
 import { createCacheTrace } from "../../cache-trace.js";
 import { createAnthropicPayloadLogger } from "../../anthropic-payload-log.js";
 import { resolveSendellAgentDir } from "../../agent-paths.js";
-import { resolveSessionAgentIds } from "../../agent-scope.js";
+import { resolveSessionAgentIds, resolveSessionAgentId } from "../../agent-scope.js";
+import { getMemorySearchManager } from "../../../memory/index.js";
 import { makeBootstrapWarn, resolveBootstrapContextForRun } from "../../bootstrap-files.js";
 import { resolveSendellDocsPath } from "../../docs-path.js";
 import { resolveModelAuthMode } from "../../model-auth.js";
@@ -711,6 +712,48 @@ export async function runEmbeddedAttempt(
             }
           } catch (hookErr) {
             log.warn(`before_agent_start hook failed: ${String(hookErr)}`);
+          }
+        }
+
+        // Auto-enrichment: search memory before LLM call and inject relevant context.
+        // This ensures agents always have past context without needing to decide to search.
+        // Skipped for subagents (they inherit context from parent) and very short prompts.
+        if (
+          params.config &&
+          params.prompt.trim().length >= 10 &&
+          !isSubagentSessionKey(params.sessionKey ?? "")
+        ) {
+          try {
+            const agentId = resolveSessionAgentId({
+              sessionKey: params.sessionKey,
+              config: params.config,
+            });
+            const { manager } = await getMemorySearchManager({
+              cfg: params.config,
+              agentId,
+            });
+            if (manager) {
+              const results = await manager.search(params.prompt, {
+                maxResults: 5,
+                minScore: 0.45,
+                sessionKey: params.sessionKey,
+              });
+              if (results.length > 0) {
+                const snippets = results
+                  .map(
+                    (r, i) =>
+                      `[${i + 1}] ${r.path} (lines ${r.startLine}-${r.endLine}):\n${r.snippet.trim()}`,
+                  )
+                  .join("\n\n");
+                effectivePrompt =
+                  `<memory-context>\n${snippets}\n</memory-context>\n\n${effectivePrompt}`;
+                log.debug(
+                  `auto-enrichment: injected ${results.length} memory snippet(s) for runId=${params.runId}`,
+                );
+              }
+            }
+          } catch (enrichErr) {
+            log.warn(`auto-enrichment failed (non-fatal): ${String(enrichErr)}`);
           }
         }
 
