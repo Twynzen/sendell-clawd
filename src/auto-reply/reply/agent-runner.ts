@@ -495,6 +495,15 @@ export async function runReplyAgent(params: {
         finalPayloads = [{ text: `🧹 Auto-compaction complete${suffix}.` }, ...finalPayloads];
       }
     }
+    // Model fallback notice — always shown (not gated by verbose)
+    if (fallbackModel && modelUsed !== defaultModel) {
+      finalPayloads = [
+        {
+          text: `⚠️ Model fallback: responding with ${modelUsed} (${defaultModel} temporarily unavailable).`,
+        },
+        ...finalPayloads,
+      ];
+    }
     if (verboseEnabled && activeIsNewSession) {
       finalPayloads = [{ text: `🧭 New session: ${followupRun.run.sessionId}` }, ...finalPayloads];
     }
