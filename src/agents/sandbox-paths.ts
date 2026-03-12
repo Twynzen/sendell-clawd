@@ -1,6 +1,6 @@
-import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { assertNoPathAliasEscape, type PathAliasPolicy } from "../infra/path-alias-guards.js";
 
 const UNICODE_SPACES = /[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g;
 
@@ -8,8 +8,12 @@ function normalizeUnicodeSpaces(str: string): string {
   return str.replace(UNICODE_SPACES, " ");
 }
 
+function normalizeAtPrefix(filePath: string): string {
+  return filePath.startsWith("@") ? filePath.slice(1) : filePath;
+}
+
 function expandPath(filePath: string): string {
-  const normalized = normalizeUnicodeSpaces(filePath);
+  const normalized = normalizeUnicodeSpaces(normalizeAtPrefix(filePath));
   if (normalized === "~") {
     return os.homedir();
   }
@@ -41,31 +45,25 @@ export function resolveSandboxPath(params: { filePath: string; cwd: string; root
   return { resolved, relative };
 }
 
-export async function assertSandboxPath(params: { filePath: string; cwd: string; root: string }) {
+export async function assertSandboxPath(params: {
+  filePath: string;
+  cwd: string;
+  root: string;
+  allowFinalSymlinkForUnlink?: boolean;
+  allowFinalHardlinkForUnlink?: boolean;
+}) {
   const resolved = resolveSandboxPath(params);
-  await assertNoSymlink(resolved.relative, path.resolve(params.root));
+  const policy: PathAliasPolicy = {
+    allowFinalSymlinkForUnlink: params.allowFinalSymlinkForUnlink,
+    allowFinalHardlinkForUnlink: params.allowFinalHardlinkForUnlink,
+  };
+  await assertNoPathAliasEscape({
+    absolutePath: resolved.resolved,
+    rootPath: params.root,
+    boundaryLabel: "sandbox root",
+    policy,
+  });
   return resolved;
-}
-
-async function assertNoSymlink(relative: string, root: string) {
-  if (!relative) return;
-  const parts = relative.split(path.sep).filter(Boolean);
-  let current = root;
-  for (const part of parts) {
-    current = path.join(current, part);
-    try {
-      const stat = await fs.lstat(current);
-      if (stat.isSymbolicLink()) {
-        throw new Error(`Symlink not allowed in sandbox path: ${current}`);
-      }
-    } catch (err) {
-      const anyErr = err as { code?: string };
-      if (anyErr.code === "ENOENT") {
-        return;
-      }
-      throw err;
-    }
-  }
 }
 
 function shortPath(value: string) {

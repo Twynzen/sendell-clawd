@@ -1,6 +1,9 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { AgentToolResult } from "@mariozechner/pi-agent-core";
 import { createEditTool, createReadTool, createWriteTool } from "@mariozechner/pi-coding-agent";
 
+import { readFileWithinRoot, writeFileWithinRoot, openFileWithinRoot, SafeOpenError } from "../infra/fs-safe.js";
 import { detectMime } from "../media/mime.js";
 import type { AnyAgentTool } from "./pi-tools.types.js";
 import { assertSandboxPath } from "./sandbox-paths.js";
@@ -11,6 +14,9 @@ import { sanitizeToolResultImages } from "./tool-images.js";
 type ToolContentBlock = AgentToolResult<unknown>["content"][number];
 type ImageContentBlock = Extract<ToolContentBlock, { type: "image" }>;
 type TextContentBlock = Extract<ToolContentBlock, { type: "text" }>;
+
+const DEFAULT_READ_PAGE_MAX_BYTES = 50 * 1024;
+const MAX_ADAPTIVE_READ_PAGES = 8;
 
 async function sniffMimeFromBase64(base64: string): Promise<string | undefined> {
   const trimmed = base64.trim();
@@ -90,12 +96,6 @@ async function normalizeReadImageResult(
   return { ...result, content: nextContent };
 }
 
-type RequiredParamGroup = {
-  keys: readonly string[];
-  allowEmpty?: boolean;
-  label?: string;
-};
-
 export const CLAUDE_PARAM_GROUPS = {
   read: [{ keys: ["path", "file_path"], label: "path (path or file_path)" }],
   write: [{ keys: ["path", "file_path"], label: "path (path or file_path)" }],
@@ -113,23 +113,18 @@ export const CLAUDE_PARAM_GROUPS = {
 } as const;
 
 // Normalize tool parameters from Claude Code conventions to pi-coding-agent conventions.
-// Claude Code uses file_path/old_string/new_string while pi-coding-agent uses path/oldText/newText.
-// This prevents models trained on Claude Code from getting stuck in tool-call loops.
 export function normalizeToolParams(params: unknown): Record<string, unknown> | undefined {
   if (!params || typeof params !== "object") return undefined;
   const record = params as Record<string, unknown>;
   const normalized = { ...record };
-  // file_path → path (read, write, edit)
   if ("file_path" in normalized && !("path" in normalized)) {
     normalized.path = normalized.file_path;
     delete normalized.file_path;
   }
-  // old_string → oldText (edit)
   if ("old_string" in normalized && !("oldText" in normalized)) {
     normalized.oldText = normalized.old_string;
     delete normalized.old_string;
   }
-  // new_string → newText (edit)
   if ("new_string" in normalized && !("newText" in normalized)) {
     normalized.newText = normalized.new_string;
     delete normalized.new_string;
@@ -184,6 +179,12 @@ export function patchToolSchemaForClaudeCompatibility(tool: AnyAgentTool): AnyAg
   };
 }
 
+type RequiredParamGroup = {
+  keys: readonly string[];
+  allowEmpty?: boolean;
+  label?: string;
+};
+
 export function assertRequiredParams(
   record: Record<string, unknown> | undefined,
   groups: readonly RequiredParamGroup[],
@@ -209,7 +210,6 @@ export function assertRequiredParams(
   }
 }
 
-// Generic wrapper to normalize parameters for any tool
 export function wrapToolParamNormalization(
   tool: AnyAgentTool,
   requiredParamGroups?: readonly RequiredParamGroup[],
@@ -240,25 +240,113 @@ function wrapSandboxPathGuard(tool: AnyAgentTool, root: string): AnyAgentTool {
         (args && typeof args === "object" ? (args as Record<string, unknown>) : undefined);
       const filePath = record?.path;
       if (typeof filePath === "string" && filePath.trim()) {
-        await assertSandboxPath({ filePath, cwd: root, root });
+        await assertSandboxPath({
+          filePath,
+          cwd: root,
+          root,
+          allowFinalSymlinkForUnlink: tool.name === "delete", // Example: allow symlink for delete if needed
+        });
       }
       return tool.execute(toolCallId, normalized ?? args, signal, onUpdate);
     },
   };
 }
 
+function createHostWriteOperations(root: string) {
+  return {
+    mkdir: async (dir: string) => {
+      const resolved = path.resolve(dir);
+      const relative = path.relative(root, resolved);
+      // We don't have a mkdir-within-root, so we use assertSandboxPath + fs.mkdir
+      await assertSandboxPath({ filePath: resolved, cwd: root, root });
+      await fs.mkdir(resolved, { recursive: true });
+    },
+    writeFile: async (absolutePath: string, content: string) => {
+      const relative = path.relative(root, absolutePath);
+      await writeFileWithinRoot({
+        rootDir: root,
+        relativePath: relative,
+        data: content,
+        mkdir: true,
+      });
+    },
+  } as const;
+}
+
+function createHostEditOperations(root: string) {
+  return {
+    readFile: async (absolutePath: string) => {
+      const relative = path.relative(root, absolutePath);
+      const safeRead = await readFileWithinRoot({
+        rootDir: root,
+        relativePath: relative,
+      });
+      return safeRead.buffer;
+    },
+    writeFile: async (absolutePath: string, content: string) => {
+      const relative = path.relative(root, absolutePath);
+      await writeFileWithinRoot({
+        rootDir: root,
+        relativePath: relative,
+        data: content,
+        mkdir: true,
+      });
+    },
+    access: async (absolutePath: string) => {
+      const relative = path.relative(root, absolutePath);
+      try {
+        const opened = await openFileWithinRoot({
+          rootDir: root,
+          relativePath: relative,
+        });
+        await opened.handle.close().catch(() => {});
+      } catch (error) {
+        if (error instanceof SafeOpenError && error.code === "not-found") {
+          const err = new Error(`File not found: ${absolutePath}`) as NodeJS.ErrnoException;
+          err.code = "ENOENT";
+          throw err;
+        }
+        throw error;
+      }
+    },
+  } as const;
+}
+
 export function createSandboxedReadTool(root: string) {
-  const base = createReadTool(root) as unknown as AnyAgentTool;
+  const base = createReadTool(root, {
+    operations: {
+      readFile: async (absolutePath: string) => {
+        const relative = path.relative(root, absolutePath);
+        const safeRead = await readFileWithinRoot({
+          rootDir: root,
+          relativePath: relative,
+        });
+        return safeRead.buffer;
+      },
+      access: async (absolutePath: string) => {
+        const relative = path.relative(root, absolutePath);
+        const opened = await openFileWithinRoot({
+          rootDir: root,
+          relativePath: relative,
+        });
+        await opened.handle.close().catch(() => {});
+      },
+    }
+  }) as unknown as AnyAgentTool;
   return wrapSandboxPathGuard(createSendellReadTool(base), root);
 }
 
 export function createSandboxedWriteTool(root: string) {
-  const base = createWriteTool(root) as unknown as AnyAgentTool;
+  const base = createWriteTool(root, {
+    operations: createHostWriteOperations(root),
+  }) as unknown as AnyAgentTool;
   return wrapSandboxPathGuard(wrapToolParamNormalization(base, CLAUDE_PARAM_GROUPS.write), root);
 }
 
 export function createSandboxedEditTool(root: string) {
-  const base = createEditTool(root) as unknown as AnyAgentTool;
+  const base = createEditTool(root, {
+    operations: createHostEditOperations(root),
+  }) as unknown as AnyAgentTool;
   return wrapSandboxPathGuard(wrapToolParamNormalization(base, CLAUDE_PARAM_GROUPS.edit), root);
 }
 
@@ -272,11 +360,15 @@ export function createSendellReadTool(base: AnyAgentTool): AnyAgentTool {
         normalized ??
         (params && typeof params === "object" ? (params as Record<string, unknown>) : undefined);
       assertRequiredParams(record, CLAUDE_PARAM_GROUPS.read, base.name);
+      
+      // We don't implement full adaptive paging here like OpenClaw yet, 
+      // but we use the base tool which now has safe operations.
       const result = (await base.execute(
         toolCallId,
         normalized ?? params,
         signal,
       )) as AgentToolResult<unknown>;
+      
       const filePath = typeof record?.path === "string" ? String(record.path) : "<unknown>";
       const normalizedResult = await normalizeReadImageResult(result, filePath);
       return sanitizeToolResultImages(normalizedResult, `read:${filePath}`);
