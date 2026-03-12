@@ -33,7 +33,11 @@ function resolveComparableSessionKeyForSandbox(params: {
   });
 }
 
-export function resolveSandboxRuntimeStatus(params: { cfg?: SendellConfig; sessionKey?: string }): {
+export function resolveSandboxRuntimeStatus(params: {
+  cfg?: SendellConfig;
+  sessionKey?: string;
+  sandboxed?: boolean;
+}): {
   agentId: string;
   sessionKey: string;
   mainSessionKey: string;
@@ -49,13 +53,15 @@ export function resolveSandboxRuntimeStatus(params: { cfg?: SendellConfig; sessi
   const cfg = params.cfg;
   const sandboxCfg = resolveSandboxConfigForAgent(cfg, agentId);
   const mainSessionKey = resolveMainSessionKeyForSandbox({ cfg, agentId });
-  const sandboxed = sessionKey
-    ? shouldSandboxSession(
-        sandboxCfg,
-        resolveComparableSessionKeyForSandbox({ cfg, agentId, sessionKey }),
-        mainSessionKey,
-      )
-    : false;
+  const sandboxed =
+    params.sandboxed ??
+    (sessionKey
+      ? shouldSandboxSession(
+          sandboxCfg,
+          resolveComparableSessionKeyForSandbox({ cfg, agentId, sessionKey }),
+          mainSessionKey,
+        )
+      : false);
   return {
     agentId,
     sessionKey,

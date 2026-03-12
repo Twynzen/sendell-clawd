@@ -1,10 +1,12 @@
 import { Type } from "@sinclair/typebox";
 
 import type { SendellConfig } from "../../config/config.js";
-import { assertPublicHostname, SsrFBlockedError } from "../../infra/net/ssrf.js";
+import { SsrFBlockedError } from "../../infra/net/ssrf.js";
+import { wrapExternalContent, wrapWebContent } from "../../security/external-content.js";
 import { stringEnum } from "../schema/typebox.js";
 import type { AnyAgentTool } from "./common.js";
 import { jsonResult, readNumberParam, readStringParam } from "./common.js";
+import { fetchWithWebToolsNetworkGuard } from "./web-guarded-fetch.js";
 import {
   CacheEntry,
   DEFAULT_CACHE_TTL_MINUTES,
@@ -162,64 +164,6 @@ function isRedirectStatus(status: number): boolean {
   return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
 }
 
-async function fetchWithRedirects(params: {
-  url: string;
-  maxRedirects: number;
-  timeoutSeconds: number;
-  userAgent: string;
-}): Promise<{ response: Response; finalUrl: string }> {
-  const signal = withTimeout(undefined, params.timeoutSeconds * 1000);
-  const visited = new Set<string>();
-  let currentUrl = params.url;
-  let redirectCount = 0;
-
-  while (true) {
-    let parsedUrl: URL;
-    try {
-      parsedUrl = new URL(currentUrl);
-    } catch {
-      throw new Error("Invalid URL: must be http or https");
-    }
-    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-      throw new Error("Invalid URL: must be http or https");
-    }
-
-    await assertPublicHostname(parsedUrl.hostname);
-
-    const res = await fetch(parsedUrl.toString(), {
-      method: "GET",
-      headers: {
-        Accept: "*/*",
-        "User-Agent": params.userAgent,
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-      signal,
-      redirect: "manual",
-    });
-
-    if (isRedirectStatus(res.status)) {
-      const location = res.headers.get("location");
-      if (!location) {
-        throw new Error(`Redirect missing location header (${res.status})`);
-      }
-      redirectCount += 1;
-      if (redirectCount > params.maxRedirects) {
-        throw new Error(`Too many redirects (limit: ${params.maxRedirects})`);
-      }
-      const nextUrl = new URL(location, parsedUrl).toString();
-      if (visited.has(nextUrl)) {
-        throw new Error("Redirect loop detected");
-      }
-      visited.add(nextUrl);
-      void res.body?.cancel();
-      currentUrl = nextUrl;
-      continue;
-    }
-
-    return { response: res, finalUrl: currentUrl };
-  }
-}
-
 function formatWebFetchErrorDetail(params: {
   detail: string;
   contentType?: string | null;
@@ -237,6 +181,22 @@ function formatWebFetchErrorDetail(params: {
   const truncated = truncateText(text.trim(), maxChars);
   return truncated.text;
 }
+
+function resolveFirecrawlEndpoint(baseUrl: string): string {
+  const trimmed = baseUrl.trim();
+  if (!trimmed) return `${DEFAULT_FIRECRAWL_BASE_URL}/v2/scrape`;
+  try {
+    const url = new URL(trimmed);
+    if (url.pathname && url.pathname !== "/") {
+      return url.toString();
+    }
+    url.pathname = "/v2/scrape";
+    return url.toString();
+  } catch {
+    return `${DEFAULT_FIRECRAWL_BASE_URL}/v2/scrape`;
+  }
+}
+
 export async function fetchFirecrawlContent(params: {
   url: string;
   extractMode: ExtractMode;
@@ -292,7 +252,9 @@ export async function fetchFirecrawlContent(params: {
 
   if (!res.ok || payload?.success === false) {
     const detail = payload?.error || res.statusText;
-    throw new Error(`Firecrawl fetch failed (${res.status}): ${detail}`.trim());
+    throw new Error(
+      `Firecrawl fetch failed (${res.status}): ${wrapWebContent(detail || res.statusText, "web_fetch")}`.trim(),
+    );
   }
 
   const data = payload?.data ?? {};
@@ -336,28 +298,26 @@ async function runWebFetch(params: {
   const cached = readCache(FETCH_CACHE, cacheKey);
   if (cached) return { ...cached.value, cached: true };
 
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(params.url);
-  } catch {
-    throw new Error("Invalid URL: must be http or https");
-  }
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    throw new Error("Invalid URL: must be http or https");
-  }
-
   const start = Date.now();
   let res: Response;
+  let release: (() => Promise<void>) | null = null;
   let finalUrl = params.url;
   try {
-    const result = await fetchWithRedirects({
+    const result = await fetchWithWebToolsNetworkGuard({
       url: params.url,
       maxRedirects: params.maxRedirects,
       timeoutSeconds: params.timeoutSeconds,
-      userAgent: params.userAgent,
+      init: {
+        headers: {
+          Accept: "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
+          "User-Agent": params.userAgent,
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      },
     });
     res = result.response;
     finalUrl = result.finalUrl;
+    release = result.release;
   } catch (error) {
     if (error instanceof SsrFBlockedError) {
       throw error;
@@ -375,6 +335,7 @@ async function runWebFetch(params: {
         timeoutSeconds: params.firecrawlTimeoutSeconds,
       });
       const truncated = truncateText(firecrawl.text, params.maxChars);
+      const wrapped = wrapWebContent(truncated.text, "web_fetch");
       const payload = {
         url: params.url,
         finalUrl: firecrawl.finalUrl || finalUrl,
@@ -384,10 +345,10 @@ async function runWebFetch(params: {
         extractMode: params.extractMode,
         extractor: "firecrawl",
         truncated: truncated.truncated,
-        length: truncated.text.length,
+        length: wrapped.length,
         fetchedAt: new Date().toISOString(),
         tookMs: Date.now() - start,
-        text: truncated.text,
+        text: wrapped,
         warning: firecrawl.warning,
       };
       writeCache(FETCH_CACHE, cacheKey, payload, params.cacheTtlMs);
@@ -396,108 +357,117 @@ async function runWebFetch(params: {
     throw error;
   }
 
-  if (!res.ok) {
-    if (params.firecrawlEnabled && params.firecrawlApiKey) {
-      const firecrawl = await fetchFirecrawlContent({
-        url: params.url,
-        extractMode: params.extractMode,
-        apiKey: params.firecrawlApiKey,
-        baseUrl: params.firecrawlBaseUrl,
-        onlyMainContent: params.firecrawlOnlyMainContent,
-        maxAgeMs: params.firecrawlMaxAgeMs,
-        proxy: params.firecrawlProxy,
-        storeInCache: params.firecrawlStoreInCache,
-        timeoutSeconds: params.firecrawlTimeoutSeconds,
-      });
-      const truncated = truncateText(firecrawl.text, params.maxChars);
-      const payload = {
-        url: params.url,
-        finalUrl: firecrawl.finalUrl || finalUrl,
-        status: firecrawl.status ?? res.status,
-        contentType: "text/markdown",
-        title: firecrawl.title,
-        extractMode: params.extractMode,
-        extractor: "firecrawl",
-        truncated: truncated.truncated,
-        length: truncated.text.length,
-        fetchedAt: new Date().toISOString(),
-        tookMs: Date.now() - start,
-        text: truncated.text,
-        warning: firecrawl.warning,
-      };
-      writeCache(FETCH_CACHE, cacheKey, payload, params.cacheTtlMs);
-      return payload;
-    }
-    const rawDetail = await readResponseText(res);
-    const detail = formatWebFetchErrorDetail({
-      detail: rawDetail,
-      contentType: res.headers.get("content-type"),
-      maxChars: DEFAULT_ERROR_MAX_CHARS,
-    });
-    throw new Error(`Web fetch failed (${res.status}): ${detail || res.statusText}`);
-  }
-
-  const contentType = res.headers.get("content-type") ?? "application/octet-stream";
-  const body = await readResponseText(res);
-
-  let title: string | undefined;
-  let extractor = "raw";
-  let text = body;
-  if (contentType.includes("text/html")) {
-    if (params.readabilityEnabled) {
-      const readable = await extractReadableContent({
-        html: body,
-        url: finalUrl,
-        extractMode: params.extractMode,
-      });
-      if (readable?.text) {
-        text = readable.text;
-        title = readable.title;
-        extractor = "readability";
-      } else {
-        const firecrawl = await tryFirecrawlFallback({ ...params, url: finalUrl });
-        if (firecrawl) {
-          text = firecrawl.text;
-          title = firecrawl.title;
-          extractor = "firecrawl";
-        } else {
-          throw new Error(
-            "Web fetch extraction failed: Readability and Firecrawl returned no content.",
-          );
-        }
+  try {
+    if (!res.ok) {
+      if (params.firecrawlEnabled && params.firecrawlApiKey) {
+        const firecrawl = await fetchFirecrawlContent({
+          url: params.url,
+          extractMode: params.extractMode,
+          apiKey: params.firecrawlApiKey,
+          baseUrl: params.firecrawlBaseUrl,
+          onlyMainContent: params.firecrawlOnlyMainContent,
+          maxAgeMs: params.firecrawlMaxAgeMs,
+          proxy: params.firecrawlProxy,
+          storeInCache: params.firecrawlStoreInCache,
+          timeoutSeconds: params.firecrawlTimeoutSeconds,
+        });
+        const truncated = truncateText(firecrawl.text, params.maxChars);
+        const wrapped = wrapWebContent(truncated.text, "web_fetch");
+        const payload = {
+          url: params.url,
+          finalUrl: firecrawl.finalUrl || finalUrl,
+          status: firecrawl.status ?? res.status,
+          contentType: "text/markdown",
+          title: firecrawl.title,
+          extractMode: params.extractMode,
+          extractor: "firecrawl",
+          truncated: truncated.truncated,
+          length: wrapped.length,
+          fetchedAt: new Date().toISOString(),
+          tookMs: Date.now() - start,
+          text: wrapped,
+          warning: firecrawl.warning,
+        };
+        writeCache(FETCH_CACHE, cacheKey, payload, params.cacheTtlMs);
+        return payload;
       }
-    } else {
-      throw new Error(
-        "Web fetch extraction failed: Readability disabled and Firecrawl unavailable.",
-      );
+      const rawDetail = await readResponseText(res);
+      const detail = formatWebFetchErrorDetail({
+        detail: rawDetail,
+        contentType: res.headers.get("content-type"),
+        maxChars: DEFAULT_ERROR_MAX_CHARS,
+      });
+      const wrappedDetail = wrapWebContent(detail || res.statusText, "web_fetch");
+      throw new Error(`Web fetch failed (${res.status}): ${wrappedDetail}`);
     }
-  } else if (contentType.includes("application/json")) {
-    try {
-      text = JSON.stringify(JSON.parse(body), null, 2);
-      extractor = "json";
-    } catch {
-      text = body;
-      extractor = "raw";
+
+    const contentType = res.headers.get("content-type") ?? "application/octet-stream";
+    const body = await readResponseText(res);
+
+    let title: string | undefined;
+    let extractor = "raw";
+    let text = body;
+    if (contentType.includes("text/html")) {
+      if (params.readabilityEnabled) {
+        const readable = await extractReadableContent({
+          html: body,
+          url: finalUrl,
+          extractMode: params.extractMode,
+        });
+        if (readable?.text) {
+          text = readable.text;
+          title = readable.title;
+          extractor = "readability";
+        } else {
+          const firecrawl = await tryFirecrawlFallback({ ...params, url: finalUrl });
+          if (firecrawl) {
+            text = firecrawl.text;
+            title = firecrawl.title;
+            extractor = "firecrawl";
+          } else {
+            throw new Error(
+              "Web fetch extraction failed: Readability and Firecrawl returned no content.",
+            );
+          }
+        }
+      } else {
+        throw new Error(
+          "Web fetch extraction failed: Readability disabled and Firecrawl unavailable.",
+        );
+      }
+    } else if (contentType.includes("application/json")) {
+      try {
+        text = JSON.stringify(JSON.parse(body), null, 2);
+        extractor = "json";
+      } catch {
+        text = body;
+        extractor = "raw";
+      }
+    }
+
+    const truncated = truncateText(text, params.maxChars);
+    const wrapped = wrapWebContent(truncated.text, "web_fetch");
+    const payload = {
+      url: params.url,
+      finalUrl,
+      status: res.status,
+      contentType,
+      title,
+      extractMode: params.extractMode,
+      extractor,
+      truncated: truncated.truncated,
+      length: wrapped.length,
+      fetchedAt: new Date().toISOString(),
+      tookMs: Date.now() - start,
+      text: wrapped,
+    };
+    writeCache(FETCH_CACHE, cacheKey, payload, params.cacheTtlMs);
+    return payload;
+  } finally {
+    if (release) {
+      await release();
     }
   }
-
-  const truncated = truncateText(text, params.maxChars);
-  const payload = {
-    url: params.url,
-    finalUrl,
-    status: res.status,
-    contentType,
-    title,
-    extractMode: params.extractMode,
-    extractor,
-    truncated: truncated.truncated,
-    length: truncated.text.length,
-    fetchedAt: new Date().toISOString(),
-    tookMs: Date.now() - start,
-    text: truncated.text,
-  };
-  writeCache(FETCH_CACHE, cacheKey, payload, params.cacheTtlMs);
-  return payload;
 }
 
 async function tryFirecrawlFallback(params: {
@@ -519,7 +489,7 @@ async function tryFirecrawlFallback(params: {
       extractMode: params.extractMode,
       apiKey: params.firecrawlApiKey,
       baseUrl: params.firecrawlBaseUrl,
-      onlyMainContent: params.firecrawlOnlyMainContent,
+      onlyMainContent: params.onlyMainContent,
       maxAgeMs: params.firecrawlMaxAgeMs,
       proxy: params.firecrawlProxy,
       storeInCache: params.firecrawlStoreInCache,
@@ -528,21 +498,6 @@ async function tryFirecrawlFallback(params: {
     return { text: firecrawl.text, title: firecrawl.title };
   } catch {
     return null;
-  }
-}
-
-function resolveFirecrawlEndpoint(baseUrl: string): string {
-  const trimmed = baseUrl.trim();
-  if (!trimmed) return `${DEFAULT_FIRECRAWL_BASE_URL}/v2/scrape`;
-  try {
-    const url = new URL(trimmed);
-    if (url.pathname && url.pathname !== "/") {
-      return url.toString();
-    }
-    url.pathname = "/v2/scrape";
-    return url.toString();
-  } catch {
-    return `${DEFAULT_FIRECRAWL_BASE_URL}/v2/scrape`;
   }
 }
 

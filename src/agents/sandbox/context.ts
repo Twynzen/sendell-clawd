@@ -18,6 +18,7 @@ export async function resolveSandboxContext(params: {
   config?: SendellConfig;
   sessionKey?: string;
   workspaceDir?: string;
+  sandboxed?: boolean;
 }): Promise<SandboxContext | null> {
   const rawSessionKey = params.sessionKey?.trim();
   if (!rawSessionKey) return null;
@@ -25,6 +26,7 @@ export async function resolveSandboxContext(params: {
   const runtime = resolveSandboxRuntimeStatus({
     cfg: params.config,
     sessionKey: rawSessionKey,
+    sandboxed: params.sandboxed,
   });
   if (!runtime.sandboxed) return null;
 
@@ -98,6 +100,7 @@ export async function ensureSandboxWorkspaceForSession(params: {
   config?: SendellConfig;
   sessionKey?: string;
   workspaceDir?: string;
+  sandboxed?: boolean;
 }): Promise<SandboxWorkspaceInfo | null> {
   const rawSessionKey = params.sessionKey?.trim();
   if (!rawSessionKey) return null;
@@ -105,6 +108,7 @@ export async function ensureSandboxWorkspaceForSession(params: {
   const runtime = resolveSandboxRuntimeStatus({
     cfg: params.config,
     sessionKey: rawSessionKey,
+    sandboxed: params.sandboxed,
   });
   if (!runtime.sandboxed) return null;
 

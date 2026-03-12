@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 /**
  * Security utilities for handling untrusted external content.
  *
@@ -25,6 +27,8 @@ const SUSPICIOUS_PATTERNS = [
   /delete\s+all\s+(emails?|files?|data)/i,
   /<\/?system>/i,
   /\]\s*\n\s*\[?(system|assistant|user)\]?:/i,
+  /\[\s*(System\s*Message|System|Assistant|Internal)\s*\]/i,
+  /^\s*System:\s+/im,
 ];
 
 /**
@@ -43,9 +47,22 @@ export function detectSuspiciousPatterns(content: string): string[] {
 /**
  * Unique boundary markers for external content.
  * Using XML-style tags that are unlikely to appear in legitimate content.
+ * Each wrapper gets a unique random ID to prevent spoofing attacks.
  */
-const EXTERNAL_CONTENT_START = "<<<EXTERNAL_UNTRUSTED_CONTENT>>>";
-const EXTERNAL_CONTENT_END = "<<<END_EXTERNAL_UNTRUSTED_CONTENT>>>";
+const EXTERNAL_CONTENT_START_NAME = "EXTERNAL_UNTRUSTED_CONTENT";
+const EXTERNAL_CONTENT_END_NAME = "END_EXTERNAL_UNTRUSTED_CONTENT";
+
+function createExternalContentMarkerId(): string {
+  return randomBytes(8).toString("hex");
+}
+
+function createExternalContentStartMarker(id: string): string {
+  return `<<<${EXTERNAL_CONTENT_START_NAME} id="${id}">>>`;
+}
+
+function createExternalContentEndMarker(id: string): string {
+  return `<<<${EXTERNAL_CONTENT_END_NAME} id="${id}">>>`;
+}
 
 /**
  * Security warning prepended to external content.
@@ -67,6 +84,8 @@ export type ExternalContentSource =
   | "email"
   | "webhook"
   | "api"
+  | "browser"
+  | "channel_metadata"
   | "web_search"
   | "web_fetch"
   | "unknown";
@@ -75,6 +94,8 @@ const EXTERNAL_SOURCE_LABELS: Record<ExternalContentSource, string> = {
   email: "Email",
   webhook: "Webhook",
   api: "API",
+  browser: "Browser",
+  channel_metadata: "Channel metadata",
   web_search: "Web Search",
   web_fetch: "Web Fetch",
   unknown: "External",
@@ -96,6 +117,20 @@ const ANGLE_BRACKET_MAP: Record<number, string> = {
   0x27e9: ">", // mathematical right angle bracket
   0xfe64: "<", // small less-than sign
   0xfe65: ">", // small greater-than sign
+  0x00ab: "<", // left-pointing double angle quotation mark
+  0x00bb: ">", // right-pointing double angle quotation mark
+  0x300a: "<", // left double angle bracket
+  0x300b: ">", // right double angle bracket
+  0x27ea: "<", // mathematical left double angle bracket
+  0x27eb: ">", // mathematical right double angle bracket
+  0x27ec: "<", // mathematical left white tortoise shell bracket
+  0x27ed: ">", // mathematical right white tortoise shell bracket
+  0x27ee: "<", // mathematical left flattened parenthesis
+  0x27ef: ">", // mathematical right flattened parenthesis
+  0x276c: "<", // medium left-pointing angle bracket ornament
+  0x276d: ">", // medium right-pointing angle bracket ornament
+  0x276e: "<", // heavy left-pointing angle quotation mark ornament
+  0x276f: ">", // heavy right-pointing angle quotation mark ornament
 };
 
 function foldMarkerChar(char: string): string {
@@ -115,7 +150,7 @@ function foldMarkerChar(char: string): string {
 
 function foldMarkerText(input: string): string {
   return input.replace(
-    /[\uFF21-\uFF3A\uFF41-\uFF5A\uFF1C\uFF1E\u2329\u232A\u3008\u3009\u2039\u203A\u27E8\u27E9\uFE64\uFE65]/g,
+    /[\uFF21-\uFF3A\uFF41-\uFF5A\uFF1C\uFF1E\u2329\u232A\u3008\u3009\u2039\u203A\u27E8\u27E9\uFE64\uFE65\u00AB\u00BB\u300A\u300B\u27EA\u27EB\u27EC\u27ED\u27EE\u27EF\u276C\u276D\u276E\u276F]/g,
     (char) => foldMarkerChar(char),
   );
 }
@@ -127,8 +162,14 @@ function replaceMarkers(content: string): string {
   }
   const replacements: Array<{ start: number; end: number; value: string }> = [];
   const patterns: Array<{ regex: RegExp; value: string }> = [
-    { regex: /<<<EXTERNAL_UNTRUSTED_CONTENT>>>/gi, value: "[[MARKER_SANITIZED]]" },
-    { regex: /<<<END_EXTERNAL_UNTRUSTED_CONTENT>>>/gi, value: "[[END_MARKER_SANITIZED]]" },
+    {
+      regex: /<<<EXTERNAL_UNTRUSTED_CONTENT(?:\s+id="[^"]{1,128}")?\s*>>>/gi,
+      value: "[[MARKER_SANITIZED]]",
+    },
+    {
+      regex: /<<<END_EXTERNAL_UNTRUSTED_CONTENT(?:\s+id="[^"]{1,128}")?\s*>>>/gi,
+      value: "[[END_MARKER_SANITIZED]]",
+    },
   ];
 
   for (const pattern of patterns) {
@@ -178,16 +219,6 @@ export type WrapExternalContentOptions = {
  *
  * This function should be used whenever processing content from external sources
  * (emails, webhooks, API calls from untrusted clients) before passing to LLM.
- *
- * @example
- * ```ts
- * const safeContent = wrapExternalContent(emailBody, {
- *   source: "email",
- *   sender: "user@example.com",
- *   subject: "Help request"
- * });
- * // Pass safeContent to LLM instead of raw emailBody
- * ```
  */
 export function wrapExternalContent(content: string, options: WrapExternalContentOptions): string {
   const { source, sender, subject, includeWarning = true } = options;
@@ -205,14 +236,15 @@ export function wrapExternalContent(content: string, options: WrapExternalConten
 
   const metadata = metadataLines.join("\n");
   const warningBlock = includeWarning ? `${EXTERNAL_CONTENT_WARNING}\n\n` : "";
+  const markerId = createExternalContentMarkerId();
 
   return [
     warningBlock,
-    EXTERNAL_CONTENT_START,
+    createExternalContentStartMarker(markerId),
     metadata,
     "---",
     sanitized,
-    EXTERNAL_CONTENT_END,
+    createExternalContentEndMarker(markerId),
   ].join("\n");
 }
 
@@ -258,10 +290,11 @@ export function buildSafeExternalPrompt(params: {
  * Checks if a session key indicates an external hook source.
  */
 export function isExternalHookSession(sessionKey: string): boolean {
+  const normalized = sessionKey.trim().toLowerCase();
   return (
-    sessionKey.startsWith("hook:gmail:") ||
-    sessionKey.startsWith("hook:webhook:") ||
-    sessionKey.startsWith("hook:") // Generic hook prefix
+    normalized.startsWith("hook:gmail:") ||
+    normalized.startsWith("hook:webhook:") ||
+    normalized.startsWith("hook:") // Generic hook prefix
   );
 }
 
@@ -269,15 +302,15 @@ export function isExternalHookSession(sessionKey: string): boolean {
  * Extracts the hook type from a session key.
  */
 export function getHookType(sessionKey: string): ExternalContentSource {
-  if (sessionKey.startsWith("hook:gmail:")) return "email";
-  if (sessionKey.startsWith("hook:webhook:")) return "webhook";
-  if (sessionKey.startsWith("hook:")) return "webhook";
+  const normalized = sessionKey.trim().toLowerCase();
+  if (normalized.startsWith("hook:gmail:")) return "email";
+  if (normalized.startsWith("hook:webhook:")) return "webhook";
+  if (normalized.startsWith("hook:")) return "webhook";
   return "unknown";
 }
 
 /**
  * Wraps web search/fetch content with security markers.
- * This is a simpler wrapper for web tools that just need content wrapped.
  */
 export function wrapWebContent(
   content: string,

@@ -136,6 +136,10 @@ export function createSessionsSpawnTool(opts?: {
       const targetAgentId = requestedAgentId
         ? normalizeAgentId(requestedAgentId)
         : requesterAgentId;
+
+      // Inherit sandbox mode from requester.
+      const shouldBeSandboxed = opts?.sandboxed ?? false;
+
       if (targetAgentId !== requesterAgentId) {
         const allowAgents = resolveAgentConfig(cfg, requesterAgentId)?.subagents?.allowAgents ?? [];
         const allowAny = allowAgents.some((value) => value.trim() === "*");
@@ -225,6 +229,7 @@ export function createSessionsSpawnTool(opts?: {
             timeout: runTimeoutSeconds > 0 ? runTimeoutSeconds : undefined,
             label: label || undefined,
             spawnedBy: spawnedByKey,
+            sandboxed: shouldBeSandboxed,
             groupId: opts?.agentGroupId ?? undefined,
             groupChannel: opts?.agentGroupChannel ?? undefined,
             groupSpace: opts?.agentGroupSpace ?? undefined,

@@ -629,3 +629,17 @@ export async function writeFileFromPathWithinRoot(params: {
     rejectSourceHardlinks: true,
   });
 }
+
+export async function rmFileWithinRoot(params: {
+  rootDir: string;
+  relativePath: string;
+  force?: boolean;
+  recursive?: boolean;
+}): Promise<void> {
+  const { rootWithSep, resolved } = await resolvePathWithinRoot(params);
+  const realPath = await fs.realpath(resolved).catch(() => resolved);
+  if (!isPathInside(rootWithSep, realPath)) {
+    throw new SafeOpenError("outside-workspace", "file is outside workspace root");
+  }
+  await fs.rm(realPath, { force: params.force, recursive: params.recursive });
+}

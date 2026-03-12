@@ -153,6 +153,7 @@ export async function runEmbeddedAttempt(
     config: params.config,
     sessionKey: sandboxSessionKey,
     workspaceDir: resolvedWorkspace,
+    sandboxed: params.sandboxed,
   });
   const effectiveWorkspace = sandbox?.enabled
     ? sandbox.workspaceAccess === "rw"

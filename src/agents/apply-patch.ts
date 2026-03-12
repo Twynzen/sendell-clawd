@@ -5,6 +5,7 @@ import type { AgentTool } from "@mariozechner/pi-agent-core";
 import { Type } from "@sinclair/typebox";
 import { applyUpdateHunk } from "./apply-patch-update.js";
 import { assertSandboxPath } from "./sandbox-paths.js";
+import { readFileWithinRoot, writeFileWithinRoot, rmFileWithinRoot } from "../infra/fs-safe.js";
 
 const BEGIN_PATCH_MARKER = "*** Begin Patch";
 const END_PATCH_MARKER = "*** End Patch";
@@ -137,17 +138,27 @@ export async function applyPatch(
       throw err;
     }
 
+    const rootDir = options.sandboxRoot ?? options.cwd;
+
     if (hunk.kind === "add") {
       const target = await resolvePatchPath(hunk.path, options);
-      await ensureDir(target.resolved);
-      await fs.writeFile(target.resolved, hunk.contents, "utf8");
+      await writeFileWithinRoot({
+        rootDir,
+        relativePath: target.relative,
+        data: hunk.contents,
+        mkdir: true,
+      });
       recordSummary(summary, seen, "added", target.display);
       continue;
     }
 
     if (hunk.kind === "delete") {
       const target = await resolvePatchPath(hunk.path, options);
-      await fs.rm(target.resolved);
+      await rmFileWithinRoot({
+        rootDir,
+        relativePath: target.relative,
+        force: true,
+      }).catch(() => {});
       recordSummary(summary, seen, "deleted", target.display);
       continue;
     }
@@ -157,12 +168,25 @@ export async function applyPatch(
 
     if (hunk.movePath) {
       const moveTarget = await resolvePatchPath(hunk.movePath, options);
-      await ensureDir(moveTarget.resolved);
-      await fs.writeFile(moveTarget.resolved, applied, "utf8");
-      await fs.rm(target.resolved);
+      await writeFileWithinRoot({
+        rootDir,
+        relativePath: moveTarget.relative,
+        data: applied,
+        mkdir: true,
+      });
+      await rmFileWithinRoot({
+        rootDir,
+        relativePath: target.relative,
+        force: true,
+      }).catch(() => {});
       recordSummary(summary, seen, "modified", moveTarget.display);
     } else {
-      await fs.writeFile(target.resolved, applied, "utf8");
+      await writeFileWithinRoot({
+        rootDir,
+        relativePath: target.relative,
+        data: applied,
+        mkdir: true,
+      });
       recordSummary(summary, seen, "modified", target.display);
     }
   }
@@ -205,23 +229,17 @@ async function ensureDir(filePath: string) {
 async function resolvePatchPath(
   filePath: string,
   options: ApplyPatchOptions,
-): Promise<{ resolved: string; display: string }> {
-  if (options.sandboxRoot) {
-    const resolved = await assertSandboxPath({
-      filePath,
-      cwd: options.cwd,
-      root: options.sandboxRoot,
-    });
-    return {
-      resolved: resolved.resolved,
-      display: resolved.relative || resolved.resolved,
-    };
-  }
-
-  const resolved = resolvePathFromCwd(filePath, options.cwd);
+): Promise<{ resolved: string; relative: string; display: string }> {
+  const root = options.sandboxRoot ?? options.cwd;
+  const resolved = await assertSandboxPath({
+    filePath,
+    cwd: options.cwd,
+    root,
+  });
   return {
-    resolved,
-    display: toDisplayPath(resolved, options.cwd),
+    resolved: resolved.resolved,
+    relative: resolved.relative,
+    display: resolved.relative || resolved.resolved,
   };
 }
 

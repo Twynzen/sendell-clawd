@@ -91,4 +91,5 @@ export type RunEmbeddedPiAgentParams = {
   streamParams?: AgentStreamParams;
   ownerNumbers?: string[];
   enforceFinalTag?: boolean;
+  sandboxed?: boolean;
 };
