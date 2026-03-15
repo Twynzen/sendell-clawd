@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 
 import { webhookCallback } from "grammy";
@@ -15,6 +16,17 @@ import {
 } from "../logging/diagnostic.js";
 import { resolveTelegramAllowedUpdates } from "./allowed-updates.js";
 import { createTelegramBot } from "./bot.js";
+
+function hasValidTelegramWebhookSecret(
+  header: string | string[] | undefined,
+  expectedSecret: string,
+): boolean {
+  const value = Array.isArray(header) ? (header.length === 1 ? header[0] : undefined) : header;
+  if (typeof value !== "string") return false;
+  const actual = Buffer.from(value, "utf-8");
+  const expected = Buffer.from(expectedSecret, "utf-8");
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
 
 export async function startTelegramWebhook(opts: {
   token: string;
@@ -60,6 +72,15 @@ export async function startTelegramWebhook(opts: {
     if (req.url !== path || req.method !== "POST") {
       res.writeHead(404);
       res.end();
+      return;
+    }
+    // Validate secret token BEFORE reading the request body (GHSA-jq3f-vjww-8rq7).
+    // Rejecting early prevents unauthenticated callers from forcing body reads.
+    if (opts.secret && !hasValidTelegramWebhookSecret(req.headers["x-telegram-bot-api-secret-token"], opts.secret)) {
+      res.shouldKeepAlive = false;
+      res.setHeader("Connection", "close");
+      res.writeHead(401);
+      res.end("unauthorized");
       return;
     }
     const startTime = Date.now();

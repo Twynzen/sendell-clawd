@@ -148,10 +148,20 @@ function foldMarkerChar(char: string): string {
   return char;
 }
 
+// Invisible format characters that can split marker tokens without changing how
+// downstream models interpret the apparent boundary text (GHSA invisible-char bypass).
+const MARKER_IGNORABLE_CHAR_RE = /\u200B|\u200C|\u200D|\u2060|\uFEFF|\u00AD/g;
+
 function foldMarkerText(input: string): string {
-  return input.replace(
-    /[\uFF21-\uFF3A\uFF41-\uFF5A\uFF1C\uFF1E\u2329\u232A\u3008\u3009\u2039\u203A\u27E8\u27E9\uFE64\uFE65\u00AB\u00BB\u300A\u300B\u27EA\u27EB\u27EC\u27ED\u27EE\u27EF\u276C\u276D\u276E\u276F]/g,
-    (char) => foldMarkerChar(char),
+  return (
+    input
+      // Strip invisible format characters before folding so they cannot split
+      // marker tokens and bypass boundary detection.
+      .replace(MARKER_IGNORABLE_CHAR_RE, "")
+      .replace(
+        /[\uFF21-\uFF3A\uFF41-\uFF5A\uFF1C\uFF1E\u2329\u232A\u3008\u3009\u2039\u203A\u27E8\u27E9\uFE64\uFE65\u00AB\u00BB\u300A\u300B\u27EA\u27EB\u27EC\u27ED\u27EE\u27EF\u276C\u276D\u276E\u276F]/g,
+        (char) => foldMarkerChar(char),
+      )
   );
 }
 
