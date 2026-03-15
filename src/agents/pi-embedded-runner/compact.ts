@@ -51,6 +51,10 @@ import {
   resolveSkillsPromptForRun,
   type SkillSnapshot,
 } from "../skills.js";
+import {
+  compactWithSafetyTimeout,
+  resolveCompactionTimeoutMs,
+} from "./compaction-safety-timeout.js";
 import { buildEmbeddedExtensionPaths } from "./extensions.js";
 import {
   logToolSchemasForGoogle,
@@ -429,7 +433,11 @@ export async function compactEmbeddedPiSessionDirect(
         if (limited.length > 0) {
           session.agent.replaceMessages(limited);
         }
-        const result = await session.compact(params.customInstructions);
+        const compactionTimeoutMs = resolveCompactionTimeoutMs(params.config);
+        const result = await compactWithSafetyTimeout(
+          () => session.compact(params.customInstructions),
+          compactionTimeoutMs,
+        );
         // Estimate tokens after compaction by summing token estimates for remaining messages
         let tokensAfter: number | undefined;
         try {

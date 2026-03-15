@@ -244,6 +244,11 @@ export type AgentCompactionConfig = {
   mode?: AgentCompactionMode;
   /** Minimum reserve tokens enforced for Pi compaction (0 disables the floor). */
   reserveTokensFloor?: number;
+  /**
+   * Safety timeout for compaction in seconds. Default: 900s (15 min).
+   * Prevents large-session compaction from freezing the agent indefinitely.
+   */
+  timeoutSeconds?: number;
   /** Pre-compaction memory flush (agentic turn). Default: enabled. */
   memoryFlush?: AgentCompactionMemoryFlushConfig;
 };

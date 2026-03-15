@@ -90,6 +90,7 @@ export const AgentDefaultsSchema = z
       .object({
         mode: z.union([z.literal("default"), z.literal("safeguard")]).optional(),
         reserveTokensFloor: z.number().int().nonnegative().optional(),
+        timeoutSeconds: z.number().int().positive().optional(),
         memoryFlush: z
           .object({
             enabled: z.boolean().optional(),
