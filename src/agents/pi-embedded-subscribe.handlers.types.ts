@@ -3,6 +3,7 @@ import type { AgentEvent, AgentMessage } from "@mariozechner/pi-agent-core";
 import type { ReasoningLevel } from "../auto-reply/thinking.js";
 import type { ReplyDirectiveParseResult } from "../auto-reply/reply/reply-directives.js";
 import type { InlineCodeState } from "../markdown/code-spans.js";
+import type { RecentDeliveredEntry } from "./pi-embedded-helpers.js";
 import type { EmbeddedBlockChunker } from "./pi-embedded-block-chunker.js";
 import type { MessagingToolSend } from "./pi-embedded-messaging.js";
 import type {
@@ -53,6 +54,8 @@ export type EmbeddedPiSubscribeState = {
   compactionRetryResolve?: () => void;
   compactionRetryPromise: Promise<void> | null;
 
+  /** Cross-turn dedup cache — persists across assistant message turns within a session. */
+  recentDeliveredTexts: RecentDeliveredEntry[];
   messagingToolSentTexts: string[];
   messagingToolSentTextsNormalized: string[];
   messagingToolSentTargets: MessagingToolSend[];

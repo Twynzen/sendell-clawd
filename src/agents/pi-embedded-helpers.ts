@@ -40,10 +40,14 @@ export {
   sanitizeSessionMessagesImages,
 } from "./pi-embedded-helpers/images.js";
 export {
+  buildDeliveredTextHash,
   isMessagingToolDuplicate,
   isMessagingToolDuplicateNormalized,
+  isRecentlyDelivered,
   normalizeTextForComparison,
+  recordDeliveredText,
 } from "./pi-embedded-helpers/messaging-dedupe.js";
+export type { RecentDeliveredEntry } from "./pi-embedded-helpers/messaging-dedupe.js";
 
 export { pickFallbackThinkingLevel } from "./pi-embedded-helpers/thinking.js";
 

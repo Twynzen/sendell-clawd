@@ -12,6 +12,7 @@ import {
 } from "../../config/sessions.js";
 import { logVerbose } from "../../globals.js";
 import { registerAgentRunContext } from "../../infra/agent-events.js";
+import { isSubagentSessionKey } from "../../routing/session-key.js";
 import type { TemplateContext } from "../templating.js";
 import type { VerboseLevel } from "../thinking.js";
 import type { GetReplyOptions } from "../types.js";
@@ -23,6 +24,29 @@ import {
 } from "./memory-flush.js";
 import type { FollowupRun } from "./queue.js";
 import { incrementCompactionCount } from "./session-updates.js";
+
+/**
+ * Determine whether a memory flush run should be attempted.
+ *
+ * Extracted for testability. Returns false for subagent sessions (to avoid
+ * write conflicts and unnecessary token spend), heartbeat runs, and CLI
+ * sessions, regardless of the writable flag.
+ *
+ * Port of openclaw 006ba42c3.
+ */
+export function shouldAttemptMemoryFlushRun(params: {
+  memoryFlushWritable: boolean;
+  isHeartbeat: boolean;
+  isCli: boolean;
+  sessionKey?: string;
+}): boolean {
+  return (
+    params.memoryFlushWritable &&
+    !params.isHeartbeat &&
+    !params.isCli &&
+    !isSubagentSessionKey(params.sessionKey)
+  );
+}
 
 export async function runMemoryFlushIfNeeded(params: {
   cfg: SendellConfig;
@@ -52,11 +76,15 @@ export async function runMemoryFlushIfNeeded(params: {
     return sandboxCfg.workspaceAccess === "rw";
   })();
 
+  const isCli = isCliProvider(params.followupRun.run.provider, params.cfg);
   const shouldFlushMemory =
     memoryFlushSettings &&
-    memoryFlushWritable &&
-    !params.isHeartbeat &&
-    !isCliProvider(params.followupRun.run.provider, params.cfg) &&
+    shouldAttemptMemoryFlushRun({
+      memoryFlushWritable,
+      isHeartbeat: params.isHeartbeat,
+      isCli,
+      sessionKey: params.sessionKey,
+    }) &&
     shouldRunMemoryFlush({
       entry:
         params.sessionEntry ??

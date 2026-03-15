@@ -7,8 +7,11 @@ import { buildCodeSpanIndex, createInlineCodeState } from "../markdown/code-span
 import { EmbeddedBlockChunker } from "./pi-embedded-block-chunker.js";
 import {
   isMessagingToolDuplicateNormalized,
+  isRecentlyDelivered,
   normalizeTextForComparison,
+  recordDeliveredText,
 } from "./pi-embedded-helpers.js";
+import type { RecentDeliveredEntry } from "./pi-embedded-helpers.js";
 import { createEmbeddedPiSessionEventHandler } from "./pi-embedded-subscribe.handlers.js";
 import type {
   EmbeddedPiSubscribeContext,
@@ -60,6 +63,7 @@ export function subscribeEmbeddedPiSession(params: SubscribeEmbeddedPiSessionPar
     pendingCompactionRetry: 0,
     compactionRetryResolve: undefined,
     compactionRetryPromise: null,
+    recentDeliveredTexts: [] as RecentDeliveredEntry[],
     messagingToolSentTexts: [],
     messagingToolSentTextsNormalized: [],
     messagingToolSentTargets: [],
@@ -106,11 +110,16 @@ export function subscribeEmbeddedPiSession(params: SubscribeEmbeddedPiSessionPar
   };
 
   const shouldSkipAssistantText = (text: string) => {
-    if (state.lastAssistantTextMessageIndex !== state.assistantMessageIndex) return false;
-    const trimmed = text.trimEnd();
-    if (trimmed && trimmed === state.lastAssistantTextTrimmed) return true;
-    const normalized = normalizeTextForComparison(text);
-    if (normalized.length > 0 && normalized === state.lastAssistantTextNormalized) return true;
+    // Same-turn dedup: skip if this text was already sent in the current assistant message.
+    if (state.lastAssistantTextMessageIndex === state.assistantMessageIndex) {
+      const trimmed = text.trimEnd();
+      if (trimmed && trimmed === state.lastAssistantTextTrimmed) return true;
+      const normalized = normalizeTextForComparison(text);
+      if (normalized.length > 0 && normalized === state.lastAssistantTextNormalized) return true;
+    }
+    // Cross-turn dedup: skip if this text was recently delivered in a prior turn.
+    // Protects against post-compaction re-emission of summary text.
+    if (isRecentlyDelivered(text, state.recentDeliveredTexts)) return true;
     return false;
   };
 
@@ -389,14 +398,25 @@ export function subscribeEmbeddedPiSession(params: SubscribeEmbeddedPiSessionPar
     } = splitResult;
     // Skip empty payloads, but always emit if audioAsVoice is set (to propagate the flag)
     if (!cleanedText && (!mediaUrls || mediaUrls.length === 0) && !audioAsVoice) return;
-    void params.onBlockReply({
-      text: cleanedText,
-      mediaUrls: mediaUrls?.length ? mediaUrls : undefined,
-      audioAsVoice,
-      replyToId,
-      replyToTag,
-      replyToCurrent,
-    });
+    void Promise.resolve()
+      .then(() =>
+        params.onBlockReply!({
+          text: cleanedText,
+          mediaUrls: mediaUrls?.length ? mediaUrls : undefined,
+          audioAsVoice,
+          replyToId,
+          replyToTag,
+          replyToCurrent,
+        }),
+      )
+      .then(() => {
+        // Record in cross-turn dedup cache only after successful delivery.
+        // Recording before send would suppress retries on transient failures.
+        if (cleanedText) recordDeliveredText(cleanedText, state.recentDeliveredTexts);
+      })
+      .catch((err: unknown) => {
+        log.warn(`block reply callback failed: ${String(err)}`);
+      });
   };
 
   const consumeReplyDirectives = (text: string, options?: { final?: boolean }) =>
