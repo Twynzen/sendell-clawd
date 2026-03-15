@@ -1,5 +1,6 @@
 import type { ExecApprovalDecision } from "../../infra/exec-approvals.js";
 import type { ExecApprovalForwarder } from "../../infra/exec-approval-forwarder.js";
+import { sanitizeExecApprovalDisplayText } from "../../infra/exec-approval-command-display.js";
 import type { ExecApprovalManager } from "../exec-approval-manager.js";
 import {
   ErrorCodes,
@@ -52,7 +53,7 @@ export function createExecApprovalHandlers(
         return;
       }
       const request = {
-        command: p.command,
+        command: sanitizeExecApprovalDisplayText(p.command),
         cwd: p.cwd ?? null,
         host: p.host ?? null,
         security: p.security ?? null,

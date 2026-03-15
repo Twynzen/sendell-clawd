@@ -8,6 +8,10 @@ import {
   summarizeDeviceTokens,
 } from "../../infra/device-pairing.js";
 import {
+  normalizeDeviceTokenScopes,
+  roleScopesAllow,
+} from "../operator-scope-compat.js";
+import {
   ErrorCodes,
   errorShape,
   formatValidationErrors,
@@ -121,7 +125,7 @@ export const deviceHandlers: GatewayRequestHandlers = {
     );
     respond(true, rejected, undefined);
   },
-  "device.token.rotate": async ({ params, respond, context }) => {
+  "device.token.rotate": async ({ params, respond, context, client }) => {
     if (!validateDeviceTokenRotateParams(params)) {
       respond(
         false,
@@ -140,6 +144,31 @@ export const deviceHandlers: GatewayRequestHandlers = {
       role: string;
       scopes?: string[];
     };
+    // Enforce caller-scope subsetting: prevent minting tokens with broader
+    // scopes than the requesting session already holds. Fixes GHSA-4jpw-hj22-2xmc.
+    const callerScopes = Array.isArray(client?.connect?.scopes) ? client.connect.scopes : [];
+    const requestedScopes = normalizeDeviceTokenScopes(scopes);
+    if (requestedScopes.length > 0 && callerScopes.length > 0) {
+      for (const scope of requestedScopes) {
+        if (
+          !roleScopesAllow({
+            role,
+            requestedScopes: [scope],
+            allowedScopes: callerScopes,
+          })
+        ) {
+          respond(
+            false,
+            undefined,
+            errorShape(
+              ErrorCodes.INVALID_REQUEST,
+              `cannot rotate token with scope '${scope}' — not held by caller session`,
+            ),
+          );
+          return;
+        }
+      }
+    }
     const entry = await rotateDeviceToken({ deviceId, role, scopes });
     if (!entry) {
       respond(false, undefined, errorShape(ErrorCodes.INVALID_REQUEST, "unknown deviceId/role"));

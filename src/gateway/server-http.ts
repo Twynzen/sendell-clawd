@@ -27,6 +27,7 @@ import {
   resolveHookDeliver,
 } from "./hooks.js";
 import { applyHookMappings } from "./hooks-mapping.js";
+import { setDefaultSecurityHeaders } from "./http-common.js";
 import { handleOpenAiHttpRequest } from "./openai-http.js";
 import { handleOpenResponsesHttpRequest } from "./openresponses-http.js";
 import { handleToolsInvokeHttpRequest } from "./tools-invoke-http.js";
@@ -75,6 +76,8 @@ export function createHooksRequestHandler(
     if (url.pathname !== basePath && !url.pathname.startsWith(`${basePath}/`)) {
       return false;
     }
+
+    setDefaultSecurityHeaders(res);
 
     const { token, fromQuery } = extractHookToken(req, url);
     if (!token || token !== hooksConfig.token) {

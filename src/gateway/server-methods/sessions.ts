@@ -154,7 +154,18 @@ export const sessionsHandlers: GatewayRequestHandlers = {
     }
     respond(true, { ok: true, key: resolved.key }, undefined);
   },
-  "sessions.patch": async ({ params, respond, context }) => {
+  "sessions.patch": async ({ params, respond, context, client, isWebchatConnect }) => {
+    if (client?.connect && isWebchatConnect(client.connect)) {
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          "webchat clients cannot patch sessions; use chat.send for session-scoped updates",
+        ),
+      );
+      return;
+    }
     if (!validateSessionsPatchParams(params)) {
       respond(
         false,
@@ -261,7 +272,18 @@ export const sessionsHandlers: GatewayRequestHandlers = {
     });
     respond(true, { ok: true, key: target.canonicalKey, entry: next }, undefined);
   },
-  "sessions.delete": async ({ params, respond }) => {
+  "sessions.delete": async ({ params, respond, client, isWebchatConnect }) => {
+    if (client?.connect && isWebchatConnect(client.connect)) {
+      respond(
+        false,
+        undefined,
+        errorShape(
+          ErrorCodes.INVALID_REQUEST,
+          "webchat clients cannot delete sessions; use operator flows for session management",
+        ),
+      );
+      return;
+    }
     if (!validateSessionsDeleteParams(params)) {
       respond(
         false,

@@ -42,6 +42,7 @@ import {
 import {
   firstDefined,
   isSenderAllowed,
+  normalizeAllowFrom,
   normalizeAllowFromWithStore,
   resolveSenderAllowMatch,
 } from "./bot-access.js";
@@ -147,10 +148,9 @@ export const buildTelegramMessageContext = async ({
   const mentionRegexes = buildMentionRegexes(cfg, route.agentId);
   const effectiveDmAllow = normalizeAllowFromWithStore({ allowFrom, storeAllowFrom });
   const groupAllowOverride = firstDefined(topicConfig?.allowFrom, groupConfig?.allowFrom);
-  const effectiveGroupAllow = normalizeAllowFromWithStore({
-    allowFrom: groupAllowOverride ?? groupAllowFrom,
-    storeAllowFrom,
-  });
+  // Group sender checks must not inherit DM pairing-store entries to prevent
+  // DM-paired users from gaining unauthorized access in group contexts.
+  const effectiveGroupAllow = normalizeAllowFrom(groupAllowOverride ?? groupAllowFrom);
   const hasGroupAllowOverride = typeof groupAllowOverride !== "undefined";
 
   if (isGroup && groupConfig?.enabled === false) {

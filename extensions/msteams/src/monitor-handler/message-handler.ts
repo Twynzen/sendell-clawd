@@ -182,10 +182,10 @@ export function createMSTeamsMessageHandler(deps: MSTeamsMessageHandlerDeps) {
         ? (msteamsCfg.groupAllowFrom ??
           (msteamsCfg.allowFrom && msteamsCfg.allowFrom.length > 0 ? msteamsCfg.allowFrom : []))
         : [];
+    // Group sender checks must not inherit DM pairing-store entries to prevent
+    // DM-paired users from gaining unauthorized access in group contexts.
     const effectiveGroupAllowFrom =
-      !isDirectMessage && msteamsCfg
-        ? [...groupAllowFrom.map((v) => String(v)), ...storedAllowFrom]
-        : [];
+      !isDirectMessage && msteamsCfg ? groupAllowFrom.map((v) => String(v)) : [];
     const teamId = activity.channelData?.team?.id;
     const teamName = activity.channelData?.team?.name;
     const channelName = activity.channelData?.channel?.name;

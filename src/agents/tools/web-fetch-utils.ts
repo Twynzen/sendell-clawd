@@ -1,3 +1,5 @@
+import { sanitizeHtml, stripInvisibleUnicode } from "./web-fetch-visibility.js";
+
 export type ExtractMode = "markdown" | "text";
 
 let readabilityDepsPromise:
@@ -103,22 +105,51 @@ export function truncateText(
   return { text: value.slice(0, maxChars), truncated: true };
 }
 
+const READABILITY_MAX_HTML_CHARS = 5_000_000;
+const READABILITY_MAX_ESTIMATED_NESTING_DEPTH = 100;
+
+function exceedsEstimatedHtmlNestingDepth(html: string, maxDepth: number): boolean {
+  let depth = 0;
+  let maxSeen = 0;
+  for (const match of html.matchAll(/<\/?[a-zA-Z]/g)) {
+    if (match[0].startsWith("</")) {
+      depth = Math.max(0, depth - 1);
+    } else {
+      depth++;
+      if (depth > maxSeen) maxSeen = depth;
+    }
+  }
+  return maxSeen > maxDepth;
+}
+
 export async function extractReadableContent(params: {
   html: string;
   url: string;
   extractMode: ExtractMode;
 }): Promise<{ text: string; title?: string } | null> {
+  const cleanHtml = await sanitizeHtml(params.html);
+
   const fallback = (): { text: string; title?: string } => {
-    const rendered = htmlToMarkdown(params.html);
+    const rendered = htmlToMarkdown(cleanHtml);
     if (params.extractMode === "text") {
-      const text = markdownToText(rendered.text) || normalizeWhitespace(stripTags(params.html));
+      const text =
+        stripInvisibleUnicode(markdownToText(rendered.text)) ||
+        stripInvisibleUnicode(normalizeWhitespace(stripTags(cleanHtml)));
       return { text, title: rendered.title };
     }
-    return rendered;
+    return { text: stripInvisibleUnicode(rendered.text), title: rendered.title };
   };
+
+  if (
+    cleanHtml.length > READABILITY_MAX_HTML_CHARS ||
+    exceedsEstimatedHtmlNestingDepth(cleanHtml, READABILITY_MAX_ESTIMATED_NESTING_DEPTH)
+  ) {
+    return fallback();
+  }
+
   try {
     const { Readability, parseHTML } = await loadReadabilityDeps();
-    const { document } = parseHTML(params.html);
+    const { document } = parseHTML(cleanHtml);
     try {
       (document as { baseURI?: string }).baseURI = params.url;
     } catch {
@@ -129,11 +160,11 @@ export async function extractReadableContent(params: {
     if (!parsed?.content) return fallback();
     const title = parsed.title || undefined;
     if (params.extractMode === "text") {
-      const text = normalizeWhitespace(parsed.textContent ?? "");
+      const text = stripInvisibleUnicode(normalizeWhitespace(parsed.textContent ?? ""));
       return text ? { text, title } : fallback();
     }
     const rendered = htmlToMarkdown(parsed.content);
-    return { text: rendered.text, title: title ?? rendered.title };
+    return { text: stripInvisibleUnicode(rendered.text), title: title ?? rendered.title };
   } catch {
     return fallback();
   }
