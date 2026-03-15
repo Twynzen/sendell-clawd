@@ -246,4 +246,13 @@ export type GatewayConfig = {
   trustedProxies?: string[];
   /** Tool access restrictions for HTTP /tools/invoke endpoint. */
   tools?: GatewayToolsConfig;
+  /**
+   * Optional list of allowed WebSocket origins (browser clients only).
+   * If set, connections with an Origin header not matching any entry are rejected.
+   * Entries are exact URL origins (e.g. "https://app.example.com") or wildcard
+   * prefixes (e.g. "https://*.example.com"). Non-browser clients (no Origin header)
+   * are always allowed regardless of this list.
+   * If not set, all origins are permitted (opt-in restriction).
+   */
+  allowedOrigins?: string[];
 };

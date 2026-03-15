@@ -264,6 +264,22 @@ export const SendellSchema = z
       .strict()
       .optional(),
     channels: ChannelsSchema,
+    security: z
+      .object({
+        auditChannel: z
+          .object({
+            enabled: z.boolean().optional(),
+            channel: z.string().min(1),
+            to: z.string().min(1),
+            accountId: z.string().optional(),
+            threadId: z.union([z.string(), z.number()]).optional(),
+            level: z.union([z.literal("all"), z.literal("dangerous")]).optional(),
+          })
+          .strict()
+          .optional(),
+      })
+      .strict()
+      .optional(),
     discovery: z
       .object({
         wideArea: z
@@ -442,6 +458,7 @@ export const SendellSchema = z
           })
           .strict()
           .optional(),
+        allowedOrigins: z.array(z.string()).optional(),
       })
       .strict()
       .optional(),

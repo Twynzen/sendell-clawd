@@ -9,6 +9,7 @@ import { isWebchatClient } from "../../utils/message-channel.js";
 
 import type { AuthRateLimiter } from "../auth-rate-limit.js";
 import type { ResolvedGatewayAuth } from "../auth.js";
+import { loadConfig } from "../../config/config.js";
 import { isLoopbackAddress } from "../net.js";
 import { getHandshakeTimeoutMs } from "../server-constants.js";
 import type { GatewayRequestContext, GatewayRequestHandlers } from "../server-methods/types.js";
@@ -21,6 +22,24 @@ import type { GatewayWsClient } from "./ws-types.js";
 type SubsystemLogger = ReturnType<typeof createSubsystemLogger>;
 
 const LOG_HEADER_MAX_LEN = 300;
+
+/**
+ * Returns true if the given origin is permitted by the allowedOrigins list.
+ * Supports exact matches and wildcard subdomain prefixes (e.g. "https://*.example.com").
+ * Non-browser clients (undefined origin) are always allowed.
+ * If allowedOrigins is empty or undefined, all origins are permitted.
+ */
+function isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
+  if (allowedOrigins.length === 0) return true;
+  for (const allowed of allowedOrigins) {
+    if (allowed === origin) return true;
+    if (allowed.startsWith("*.")) {
+      const suffix = allowed.slice(1); // e.g. ".example.com"
+      if (origin.endsWith(suffix)) return true;
+    }
+  }
+  return false;
+}
 const LOG_HEADER_FORMAT_REGEX = /\p{Cf}/gu;
 
 function replaceControlChars(value: string): string {
@@ -114,6 +133,19 @@ export function attachGatewayWsConnectionHandler(params: {
     const requestUserAgent = headerValue(upgradeReq.headers["user-agent"]);
     const forwardedFor = headerValue(upgradeReq.headers["x-forwarded-for"]);
     const realIp = headerValue(upgradeReq.headers["x-real-ip"]);
+
+    // Origin check: only applies to browser clients that send an Origin header.
+    // Non-browser clients (CLI, mobile apps) omit Origin and are always allowed.
+    if (requestOrigin) {
+      const allowedOrigins = loadConfig().gateway?.allowedOrigins ?? [];
+      if (allowedOrigins.length > 0 && !isOriginAllowed(requestOrigin, allowedOrigins)) {
+        logWsControl.warn(
+          `rejected conn=${connId} remote=${remoteAddr ?? "?"} — origin '${requestOrigin}' not in allowedOrigins`,
+        );
+        socket.close(1008, "origin not allowed");
+        return;
+      }
+    }
 
     const canvasHostPortForWs = canvasHostServerPort ?? (canvasHostEnabled ? port : undefined);
     const canvasHostOverride =
