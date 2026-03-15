@@ -78,6 +78,31 @@ const DANGEROUS_HOST_ENV_VARS = new Set([
 ]);
 const DANGEROUS_HOST_ENV_PREFIXES = ["DYLD_", "LD_"];
 
+// Patterns for env vars that contain credentials — should not leak to child processes.
+const SENSITIVE_ENV_SUFFIXES = ["_KEY", "_TOKEN", "_SECRET", "_PASSWORD", "_PASSPHRASE", "_CREDENTIAL", "_CREDENTIALS"];
+const SENSITIVE_ENV_PREFIXES = ["ANTHROPIC_", "OPENAI_", "GEMINI_", "DISCORD_", "TELEGRAM_", "WHATSAPP_"];
+
+/**
+ * Removes credential-bearing env vars from the host process environment before
+ * passing it to child processes, preventing agents from reading API keys via
+ * `env`, `printenv`, or similar commands.
+ */
+function sanitizeHostBaseEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const sanitized: NodeJS.ProcessEnv = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (value === undefined) continue;
+    const upper = key.toUpperCase();
+    if (
+      SENSITIVE_ENV_SUFFIXES.some((s) => upper.endsWith(s)) ||
+      SENSITIVE_ENV_PREFIXES.some((p) => upper.startsWith(p))
+    ) {
+      continue;
+    }
+    sanitized[key] = value;
+  }
+  return sanitized;
+}
+
 // Centralized sanitization helper.
 // Throws an error if dangerous variables or PATH modifications are detected on the host.
 function validateHostEnv(env: Record<string, string>): void {
@@ -914,7 +939,7 @@ export function createExecTool(
         workdir = resolveWorkdir(rawWorkdir, warnings);
       }
 
-      const baseEnv = coerceEnv(process.env);
+      const baseEnv = coerceEnv(sanitizeHostBaseEnv(process.env));
       const mergedEnv = params.env ? { ...baseEnv, ...params.env } : baseEnv;
 
       // Validate BEFORE merging to prevent dangerous vars from entering the stream.
@@ -1031,6 +1056,8 @@ export function createExecTool(
           security: hostSecurity,
           analysisOk,
           allowlistSatisfied,
+          containsInterpreter: baseAllowlistEval.containsInterpreter,
+          containsUntrustedBin: baseAllowlistEval.containsUntrustedBin,
         });
         const commandText = params.command;
         const invokeTimeoutMs = Math.max(
@@ -1235,6 +1262,8 @@ export function createExecTool(
           security: hostSecurity,
           analysisOk,
           allowlistSatisfied,
+          containsInterpreter: allowlistEval.containsInterpreter,
+          containsUntrustedBin: allowlistEval.containsUntrustedBin,
         });
 
         if (requiresAsk) {

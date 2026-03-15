@@ -2,6 +2,7 @@ import JSON5 from "json5";
 import type { Command } from "commander";
 
 import { readConfigFileSnapshot, writeConfigFile } from "../config/config.js";
+import { isSensitivePath, redactSensitiveConfig } from "../gateway/config-redaction.js";
 import { danger, info } from "../globals.js";
 import { defaultRuntime } from "../runtime.js";
 import { formatDocsLink } from "../terminal/links.js";
@@ -236,19 +237,26 @@ export function registerConfigCli(program: Command) {
           defaultRuntime.exit(1);
           return;
         }
+        // Redact sensitive values before displaying.
+        let value: unknown = res.value;
+        if (isSensitivePath(parsedPath) && typeof value === "string" && value.length > 0) {
+          value = "***REDACTED***";
+        } else {
+          value = redactSensitiveConfig(value);
+        }
         if (opts.json) {
-          defaultRuntime.log(JSON.stringify(res.value ?? null, null, 2));
+          defaultRuntime.log(JSON.stringify(value ?? null, null, 2));
           return;
         }
         if (
-          typeof res.value === "string" ||
-          typeof res.value === "number" ||
-          typeof res.value === "boolean"
+          typeof value === "string" ||
+          typeof value === "number" ||
+          typeof value === "boolean"
         ) {
-          defaultRuntime.log(String(res.value));
+          defaultRuntime.log(String(value));
           return;
         }
-        defaultRuntime.log(JSON.stringify(res.value ?? null, null, 2));
+        defaultRuntime.log(JSON.stringify(value ?? null, null, 2));
       } catch (err) {
         defaultRuntime.error(danger(String(err)));
         defaultRuntime.exit(1);

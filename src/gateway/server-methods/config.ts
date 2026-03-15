@@ -1,4 +1,5 @@
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../../agents/agent-scope.js";
+import { redactConfigSnapshot } from "../config-redaction.js";
 import {
   CONFIG_PATH_SENDELL,
   loadConfig,
@@ -96,7 +97,7 @@ export const configHandlers: GatewayRequestHandlers = {
       return;
     }
     const snapshot = await readConfigFileSnapshot();
-    respond(true, snapshot, undefined);
+    respond(true, redactConfigSnapshot(snapshot), undefined);
   },
   "config.schema": ({ params, respond }) => {
     if (!validateConfigSchemaParams(params)) {

@@ -8,6 +8,7 @@ import type { GatewayRequestHandler } from "../gateway/server-methods/types.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
 import { resolveUserPath } from "../utils.js";
 import { discoverSendellPlugins } from "./discovery.js";
+import { scanPluginSourceFile } from "./safety-scan.js";
 import { loadPluginManifestRegistry } from "./manifest-registry.js";
 import {
   normalizePluginsConfig,
@@ -21,6 +22,7 @@ import { createPluginRegistry, type PluginRecord, type PluginRegistry } from "./
 import { createPluginRuntime } from "./runtime/index.js";
 import { setActivePluginRegistry } from "./runtime.js";
 import { validateJsonSchemaValue } from "./schema-validator.js";
+import { AuditChannelPlugin } from "./builtin-audit-channel.js";
 import type {
   SendellPluginDefinition,
   SendellPluginModule,
@@ -189,6 +191,21 @@ export function loadSendellPlugins(options: PluginLoadOptions = {}): PluginRegis
     coreGatewayHandlers: options.coreGatewayHandlers as Record<string, GatewayRequestHandler>,
   });
 
+  // Register built-in plugins (always enabled, they check their own config)
+  const auditApi = createApi(
+    createPluginRecord({
+      id: AuditChannelPlugin.id,
+      name: AuditChannelPlugin.name,
+      description: AuditChannelPlugin.description,
+      source: "builtin",
+      origin: "bundled",
+      enabled: true,
+      configSchema: true,
+    }),
+    { config: cfg },
+  );
+  AuditChannelPlugin.register(auditApi);
+
   const discovery = discoverSendellPlugins({
     workspaceDir: options.workspaceDir,
     extraPaths: normalized.loadPaths,
@@ -284,6 +301,7 @@ export function loadSendellPlugins(options: PluginLoadOptions = {}): PluginRegis
 
     let mod: SendellPluginModule | null = null;
     try {
+      scanPluginSourceFile(candidate.source);
       mod = jiti(candidate.source) as SendellPluginModule;
     } catch (err) {
       logger.error(`[plugins] ${record.id} failed to load from ${record.source}: ${String(err)}`);
